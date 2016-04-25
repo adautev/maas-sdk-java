@@ -35,6 +35,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+/**
+ * Main class for interfacing with Miracl service.
+ */
 public class MiraclClient
 {
 	private static final String KEY_STATE = "miracl_state";
@@ -47,6 +50,12 @@ public class MiraclClient
 	private final URI redirectUrl;
 	private final OIDCProviderMetadata providerMetadata;
 
+	/**
+	 * @param clientId     Client ID
+	 * @param clientSecret Client secret
+	 * @param redirectUrl  Redirect URL
+	 * @throws MiraclException if parameters can't be parsed
+	 */
 	public MiraclClient(String clientId, String clientSecret, String redirectUrl) throws MiraclException
 	{
 		try
@@ -100,6 +109,13 @@ public class MiraclClient
 		}
 	}
 
+	/**
+	 * Get {@link URI} for authorization request. User should be redirected to this URI and after user is redirected back,
+	 * call {@link #validateAuthorization(MiraclStatePreserver, String)} to complete authorization with server.
+	 * @param preserver Miracl preserver object for current user
+	 * @return Request URI for user to be redirected to. After request redirects back, pass `queryString`
+	 * to `validateAuthorization` to complete authorization with server.
+	 */
 	public URI getAuthorizationRequestUrl(MiraclStatePreserver preserver)
 	{
 		State state = new State();
@@ -118,6 +134,16 @@ public class MiraclClient
 		return authenticationRequest.toURI();
 	}
 
+	/**
+	 * Completes authorization with server and returns access token. Access token is saved in
+	 * {@link MiraclStatePreserver preserver} so usually it is not needed to save access token
+	 * This method can block while performing request to Miracl system
+	 * @param preserver Miracl preserver object for current user
+	 * @param queryString query string from request on redirectUrl
+	 * @return Token
+	 * @throws MiraclClientException if there is problem with token request
+	 * @throws MiraclSystemException if failure occurred while communicating with server
+	 */
 	public String validateAuthorization(MiraclStatePreserver preserver, String queryString) throws MiraclException
 	{
 		try
@@ -171,11 +197,24 @@ public class MiraclClient
 	}
 
 
+	/**
+	 * Clears user info from {@link MiraclStatePreserver preserver}. Can be used to refresh user data before using
+	 * {@link #getUserId(MiraclStatePreserver)} and {@link #getEmail(MiraclStatePreserver)}
+	 * @param preserver Miracl preserver object for current user
+	 * @see #clearUserInfoAndSession(MiraclStatePreserver) to remove session info
+	 *
+	 */
 	public void clearUserInfo(MiraclStatePreserver preserver)
 	{
 		preserver.remove(KEY_USERINFO);
 	}
 
+	/**
+	 * Clears user and session info from {@link MiraclStatePreserver preserver}
+	 * @param preserver Miracl preserver object for current user
+	 * @see #clearUserInfo(MiraclStatePreserver) to remove only user info
+	 *
+	 */
 	public void clearUserInfoAndSession(MiraclStatePreserver preserver)
 	{
 		clearUserInfo(preserver);
@@ -232,6 +271,12 @@ public class MiraclClient
 		}
 	}
 
+	/**
+	 * Checks if token is in {@link MiraclStatePreserver preserver} and user data is accessible (by request or in cache).
+	 * This method can block while performing request to Miracl system
+	 * @param preserver Miracl preserver object for current user
+	 * @return if user associated with {@link MiraclStatePreserver preserver} is authorized
+	 */
 	public boolean isAuthorized(MiraclStatePreserver preserver)
 	{
 		try
@@ -244,6 +289,15 @@ public class MiraclClient
 		}
 	}
 
+	/**
+	 * Get user e-mail.
+	 * This method can block while performing request to Miracl system
+	 * @param preserver Miracl preserver object for current user
+	 * @return User e-mail
+	 * @throws MiraclClientException if there is problem with request
+	 * @throws MiraclSystemException if failure occurred while communicating with server
+	 * @see #getUserId(MiraclStatePreserver) for requesting user ID
+	 */
 	public String getEmail(MiraclStatePreserver preserver) throws MiraclException
 	{
 		final UserInfo userInfo = requestUserInfo(preserver);
@@ -254,7 +308,15 @@ public class MiraclClient
 		return null;
 	}
 
-
+	/**
+	 * Get user id.
+	 * This method can block while performing request to Miracl system
+	 * @param preserver Miracl preserver object for current user
+	 * @return User id
+	 * @throws MiraclClientException if there is problem with request
+	 * @throws MiraclSystemException if failure occurred while communicating with server
+	 * @see #getEmail(MiraclStatePreserver) for requesting user e-mail
+	 */
 	public String getUserId(MiraclStatePreserver preserver) throws MiraclException
 	{
 		final UserInfo userInfo = requestUserInfo(preserver);
