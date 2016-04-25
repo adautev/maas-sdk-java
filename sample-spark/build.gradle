@@ -1,0 +1,21 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+version maas_version
+group maas_group
+
+sourceCompatibility = 1.8
+
+mainClassName = "com.miracl.maas_samples.SparkSample"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    compile project(":maas-sdk")
+    //If installed to local Maven repo:
+    // compile "com.miracl:maas-sdk:0.1-SNAPSHOT
+    compile "com.sparkjava:spark-core:2.3"
+}

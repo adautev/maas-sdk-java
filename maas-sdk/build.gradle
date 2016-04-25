@@ -1,0 +1,33 @@
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+version maas_version
+group maas_group
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.nimbusds:oauth2-oidc-sdk:5.7'
+}
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId group
+            artifactId 'maas-sdk'
+            version version
+            from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
