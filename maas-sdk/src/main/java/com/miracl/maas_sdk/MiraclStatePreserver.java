@@ -5,7 +5,7 @@ package com.miracl.maas_sdk;
  * Implementation of this interface is framework-specific and it usually is wrapper around secure cookie storage or
  * session storage.
  *
- * @see MiraclMapStatePreserver for example implementation using {@link java.util.Map}
+ * @see MiraclMapStatePreserver for example implementation using Map
  */
 public interface MiraclStatePreserver
 {

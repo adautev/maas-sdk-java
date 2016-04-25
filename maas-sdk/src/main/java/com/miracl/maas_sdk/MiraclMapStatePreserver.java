@@ -36,7 +36,7 @@ public class MiraclMapStatePreserver implements MiraclStatePreserver
 	}
 
 	/**
-	 * @see MiraclStatePreserver#remove(String) 
+	 * @see MiraclStatePreserver#remove(String)
 	 */
 	@Override
 	public void remove(String key)
