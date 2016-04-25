@@ -20,10 +20,16 @@ dependencies {
 
 `maas-sdk` needs Java 8.
 
+All commands in this document are for Linux/MacOS. For Windows command, replace `./gradlew` with `gradlew.bat`.
+
 ## Local Installation
 
 Use `./gradlew maas-sdk:publishToMavenLocal` to compile SDK and install it as artifact to local Maven repository.
 `maas-sdk` directory can also be used as subproject in Gradle project.
+
+## Documentation generation
+
+To generate JavaDoc, use `./gradlew maas-sdk:javadoc`. Result can be found in `maas-sdk/build/docs`.
 
 # Miracl API
 
