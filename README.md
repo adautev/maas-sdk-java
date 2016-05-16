@@ -58,9 +58,19 @@ user id), use `client.clearUserInfoAndSession(session)` to also clear user autho
 
 ### Authorization flow
 
-If user is not authorized, he should be redirected to URL returned by
-`client.getAuthorizationRequestUrl(session)`. After redirect and user
-interaction with Miracl system, user will be sent to `redirectUri` defined at
+Authorization flow depends on `mpin.js` browser library. `mpin.js` depends on
+`jquery`.To use it, load it in `<head>` element of page responsible for login:
+
+```
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script src="http://mpinaas-demo.miracl.net:8002/mpin/mpin.js"></script>
+```
+
+If user is not authorized, authorization URL can be acquired from
+`client.getAuthorizationRequestUrl(session)`. Returned URL should be used with `mpin.js` login
+function `mpin.login({authURL: "< auth-url >"})`.
+
+After user interaction with Miracl system, user will be sent to `redirectUri` defined at
 creation of `MiraclClient` object.
 
 To complete authorization pass query string received on `redirectUri` to
