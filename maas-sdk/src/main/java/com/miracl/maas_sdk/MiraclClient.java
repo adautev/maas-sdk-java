@@ -32,8 +32,10 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * Main class for interfacing with Miracl service.
@@ -63,45 +65,25 @@ public class MiraclClient
 			this.clientId = new ClientID(clientId);
 			this.clientSecret = new Secret(clientSecret);
 			this.redirectUrl = new URI(redirectUrl);
-			providerMetadata = OIDCProviderMetadata.parse(
-					"{" +
-					"\"request_parameter_supported\":false," +
-					"\"display_values_supported\":[\"page\",\"popup\"]," +
-					"\"response_types_supported\":[" +
-					"\"code\",\"id_token\",\"token id_token\",\"code id_token\"" +
-					"]," +
-					"\"token_endpoint_auth_signing_alg_values_supported\":[" +
-					"\"HS256\",\"HS512\",\"HS384\"" +
-					"]," +
-					"\"registration_endpoint\":\"https:\\/\\/m-pin.my.id\\/c2id\\/client-reg\"," +
-					"\"ui_locales_supported\":[\"en\"]," +
-					"\"userinfo_signing_alg_values_supported\":[" +
-					"\"PS256\",\"HS256\",\"RS384\",\"HS512\",\"RS512\",\"PS384\",\"RS256\",\"HS384\",\"PS512\"" +
-					"]," +
-					"\"token_endpoint\":\"https:\\/\\/m-pin.my.id\\/c2id\\/token\"," +
-					"\"claim_types_supported\":[\"normal\"]," +
-					"\"grant_types_supported\":[\"implicit\",\"authorization_code\"]," +
-					"\"scopes_supported\":[\"openid\",\"profile\",\"email\",\"address\",\"phone\",\"offline_access\"]," +
-					"\"request_uri_parameter_supported\":false," +
-					"\"acr_values_supported\":[\"0\"]," +
-					"\"userinfo_endpoint\":\"https:\\/\\/m-pin.my.id\\/c2id\\/userinfo\"," +
-					"\"token_endpoint_auth_methods_supported\":[" +
-					"\"client_secret_post\",\"client_secret_jwt\",\"client_secret_basic\"" +
-					"]," +
-					"\"subject_types_supported\":[\"public\"]," +
-					"\"response_modes_supported\":[\"query\",\"fragment\"]," +
-					"\"issuer\":\"https:\\/\\/m-pin.my.id\\/c2id\"," +
-					"\"claims_parameter_supported\":true," +
-					"\"jwks_uri\":\"https:\\/\\/m-pin.my.id\\/c2id\\/jwks.json\"," +
-					"\"claims_supported\":[" +
-					"\"sub\",\"iss\",\"auth_time\",\"acr\",\"name\",\"given_name\",\"family_name\",\"nickname\",\"email\",\"email_verified\"" +
-					"]," +
-					"\"id_token_signing_alg_values_supported\":[" +
-					"\"RS256\",\"RS384\",\"RS512\",\"PS256\",\"PS384\",\"PS512\",\"HS256\",\"HS384\",\"HS512\"" +
-					"]," +
-					"\"authorization_endpoint\":\"https:\\/\\/m-pin.my.id\\/abstractlogin\"," +
-					"\"require_request_uri_registration\":false}"
-			                                             );
+			try
+			{
+				URI issuerURI = new URI("http://mpinaas-demo.miracl.net:8001");
+				URL providerConfigurationURL = issuerURI.resolve("/.well-known/openid-configuration").toURL();
+				InputStream stream = providerConfigurationURL.openStream();
+
+				String providerInfo = null;
+				try (java.util.Scanner s = new java.util.Scanner(stream))
+				{
+					providerInfo = s.useDelimiter("\\A").hasNext() ? s.next() : "";
+				}
+				providerMetadata = OIDCProviderMetadata.parse(providerInfo);
+
+			}
+			catch (IOException e)
+			{
+				throw new MiraclSystemException(e);
+			}
+
 		}
 		catch (URISyntaxException | ParseException e)
 		{
@@ -112,6 +94,7 @@ public class MiraclClient
 	/**
 	 * Get {@link URI} for authorization request. User should be redirected to this URI and after user is redirected back,
 	 * call {@link #validateAuthorization(MiraclStatePreserver, String)} to complete authorization with server.
+	 *
 	 * @param preserver Miracl preserver object for current user
 	 * @return Request URI for user to be redirected to. After request redirects back, pass `queryString`
 	 * to `validateAuthorization` to complete authorization with server.
@@ -138,7 +121,8 @@ public class MiraclClient
 	 * Completes authorization with server and returns access token. Access token is saved in
 	 * {@link MiraclStatePreserver preserver} so usually it is not needed to save access token
 	 * This method can block while performing request to Miracl system
-	 * @param preserver Miracl preserver object for current user
+	 *
+	 * @param preserver   Miracl preserver object for current user
 	 * @param queryString query string from request on redirectUrl
 	 * @return Token
 	 * @throws MiraclClientException if there is problem with token request
@@ -200,9 +184,9 @@ public class MiraclClient
 	/**
 	 * Clears user info from {@link MiraclStatePreserver preserver}. Can be used to refresh user data before using
 	 * {@link #getUserId(MiraclStatePreserver)} and {@link #getEmail(MiraclStatePreserver)}
+	 *
 	 * @param preserver Miracl preserver object for current user
 	 * @see #clearUserInfoAndSession(MiraclStatePreserver) to remove session info
-	 *
 	 */
 	public void clearUserInfo(MiraclStatePreserver preserver)
 	{
@@ -211,9 +195,9 @@ public class MiraclClient
 
 	/**
 	 * Clears user and session info from {@link MiraclStatePreserver preserver}
+	 *
 	 * @param preserver Miracl preserver object for current user
 	 * @see #clearUserInfo(MiraclStatePreserver) to remove only user info
-	 *
 	 */
 	public void clearUserInfoAndSession(MiraclStatePreserver preserver)
 	{
@@ -274,6 +258,7 @@ public class MiraclClient
 	/**
 	 * Checks if token is in {@link MiraclStatePreserver preserver} and user data is accessible (by request or in cache).
 	 * This method can block while performing request to Miracl system
+	 *
 	 * @param preserver Miracl preserver object for current user
 	 * @return if user associated with {@link MiraclStatePreserver preserver} is authorized
 	 */
@@ -292,6 +277,7 @@ public class MiraclClient
 	/**
 	 * Get user e-mail.
 	 * This method can block while performing request to Miracl system
+	 *
 	 * @param preserver Miracl preserver object for current user
 	 * @return User e-mail
 	 * @throws MiraclClientException if there is problem with request
@@ -311,6 +297,7 @@ public class MiraclClient
 	/**
 	 * Get user id.
 	 * This method can block while performing request to Miracl system
+	 *
 	 * @param preserver Miracl preserver object for current user
 	 * @return User id
 	 * @throws MiraclClientException if there is problem with request
