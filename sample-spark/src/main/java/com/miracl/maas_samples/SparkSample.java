@@ -106,7 +106,7 @@ public class SparkSample
 		get("/logout", (req, res) -> {
 			final MiraclSparkSessionWrapper preserver = new MiraclSparkSessionWrapper(req.session());
 			miracl.clearUserInfoAndSession(preserver);
-			flashMessage(req.session(), "info", "User logged out");
+			flashMessage(req.session(), "info", "User logged out!");
 			res.redirect("/");
 			return "";
 		});
