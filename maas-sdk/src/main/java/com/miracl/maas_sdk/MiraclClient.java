@@ -290,7 +290,16 @@ public class MiraclClient
 		final UserInfo userInfo = requestUserInfo(preserver);
 		if (userInfo != null)
 		{
-			return userInfo.getStringClaim("sub");
+			final String email = userInfo.getStringClaim("email");
+			if (email != null)
+			{
+				return email;
+			}
+			else
+			{
+				return "";
+			}
+
 		}
 		return null;
 	}
@@ -310,7 +319,15 @@ public class MiraclClient
 		final UserInfo userInfo = requestUserInfo(preserver);
 		if (userInfo != null)
 		{
-			return userInfo.getStringClaim("user_id");
+			final String sub = userInfo.getStringClaim("sub");
+			if (sub != null)
+			{
+				return sub;
+			}
+			else
+			{
+				return "";
+			}
 		}
 		return null;
 	}
