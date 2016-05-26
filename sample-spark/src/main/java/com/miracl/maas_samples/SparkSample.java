@@ -13,7 +13,6 @@ import spark.TemplateEngine;
 import spark.template.pebble.PebbleTemplateEngine;
 
 import static spark.Spark.get;
-import static spark.Spark.port;
 
 public class SparkSample
 {
@@ -53,8 +52,8 @@ public class SparkSample
 		final PebbleEngine pebbleEngine = new PebbleEngine(new ResourcesLoader());
 		pebbleEngine.setStrictVariables(true);
 		final TemplateEngine templateEngine = new PebbleTemplateEngine(pebbleEngine);
-		port(5000);
-		MiraclClient miracl = new MiraclClient("odacf7lgvgiia", "6jnBsOP-1rtKxFoxpBQLacT08qtzUajFCKPvhXPTCFg", "http://127.0.0.1:5000/c2id");
+
+		MiraclClient miracl = new MiraclClient("CLIENT_ID", "CLIENT_SECRET", "REDIRECT_URL");
 		get("/", (req, res) -> {
 			final MiraclSparkSessionWrapper preserver = new MiraclSparkSessionWrapper(req.session());
 			Map<String, Object> data = new HashMap<>();
