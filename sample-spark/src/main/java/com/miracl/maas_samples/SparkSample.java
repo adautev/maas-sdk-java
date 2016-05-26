@@ -16,6 +16,11 @@ import static spark.Spark.get;
 
 public class SparkSample
 {
+
+	public static final String CLIENT_ID = "CLIENT_ID";
+	public static final String CLIENT_SECRET = "CLIENT_SECRET";
+	public static final String REDIRECT_URL = "REDIRECT_URL";
+
 	public static ModelAndView renderTemplate(Session session, Map<String, Object> data)
 	{
 		Map<String, Object> params = new HashMap<>(data);
@@ -52,8 +57,7 @@ public class SparkSample
 		final PebbleEngine pebbleEngine = new PebbleEngine(new ResourcesLoader());
 		pebbleEngine.setStrictVariables(true);
 		final TemplateEngine templateEngine = new PebbleTemplateEngine(pebbleEngine);
-
-		MiraclClient miracl = new MiraclClient("CLIENT_ID", "CLIENT_SECRET", "REDIRECT_URL");
+		MiraclClient miracl = new MiraclClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
 		get("/", (req, res) -> {
 			final MiraclSparkSessionWrapper preserver = new MiraclSparkSessionWrapper(req.session());
 			Map<String, Object> data = new HashMap<>();
