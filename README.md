@@ -87,5 +87,6 @@ Each call to `MiraclClient` can raise `MiraclException`. `MiraclException` can b
 
 ## Samples
 
-Replace `CLIENT_ID`, `CLIENT_SECRET` and `REDIRECT_URI` with valid data from
-https://m-pin.my.id/protected . Samples can be run after setup step is done.
+Replace `CLIENT_ID`, `CLIENT_SECRET` and `REDIRECT_URI` with valid data.
+
+To run Spark sample, use `./gradlew sample-spark:run`
