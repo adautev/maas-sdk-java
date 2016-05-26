@@ -88,7 +88,7 @@ public class SparkSample
 			else
 			{
 				flashMessage(req.session(), "danger", "Login failed!");
-				data.put("retry", "true");
+				data.put("retry", true);
 				data.put("authURL", miracl.getAuthorizationRequestUrl(preserver));
 			}
 
