@@ -109,6 +109,9 @@ public class MiraclClient
 
 		Scope scope = new Scope();
 		scope.add("openid");
+		scope.add("sub");
+		scope.add("email");
+
 
 		AuthenticationRequest authenticationRequest = new AuthenticationRequest(
 				providerMetadata.getAuthorizationEndpointURI(),
