@@ -52,7 +52,7 @@
 
     {% if retry %}
         <div class="col-md-12">
-            <a href="#" class="btn btn-primary" onClick="mpin.login({authURL: '{{ auth_url }}'})">Retry?</a>
+                    <div id="btmpin"></div>
         </div>
     {% else %}
         <div class="row">
@@ -69,10 +69,12 @@
             {% else %}
                 <div class="col-md-12">
                     <div id="btmpin"></div>
-                    <script src="https://demo.dev.miracl.net/mpin/mpad.js" data-authurl="{{ authURL }}" data-element="btmpin"></script>
                 </div>
             {% endif %}
         </div>
+    {% endif %}
+    {% if retry or not authorized %}
+    <script src="https://demo.dev.miracl.net/mpin/mpad.js" data-authurl="{{ authURL }}" data-element="btmpin"></script>
     {% endif %}
 </div>
 </body>
