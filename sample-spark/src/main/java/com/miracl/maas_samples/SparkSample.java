@@ -3,6 +3,9 @@ package com.miracl.maas_samples;
 import com.miracl.maas_sdk.MiraclClient;
 import com.mitchellbosecke.pebble.PebbleEngine;
 
+import java.lang.reflect.Field;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +57,11 @@ public class SparkSample
 
 	public static void main(String[] args)
 	{
+		//TODO: Remove when not needed - temporary workaround
+		trustAllCertificatesOld();
+		trustAllCertificatesNew();
+
+
 		final PebbleEngine pebbleEngine = new PebbleEngine(new ResourcesLoader());
 		pebbleEngine.setStrictVariables(true);
 		final TemplateEngine templateEngine = new PebbleTemplateEngine(pebbleEngine);
@@ -114,6 +122,114 @@ public class SparkSample
 			res.redirect("/");
 			return "";
 		});
+	}
+
+	//TODO: Remove when not needed - temporary workaround
+	private static void trustAllCertificatesNew()
+	{
+		javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
+				new javax.net.ssl.X509TrustManager()
+				{
+					public java.security.cert.X509Certificate[] getAcceptedIssuers()
+					{
+						return new X509Certificate[0];
+					}
+
+					public void checkClientTrusted(
+							java.security.cert.X509Certificate[] certs, String authType)
+					{
+					}
+
+					public void checkServerTrusted(
+							java.security.cert.X509Certificate[] certs, String authType)
+					{
+					}
+				}
+		};
+
+		// Install the all-trusting trust manager
+		try
+		{
+			javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		}
+		catch (GeneralSecurityException e)
+		{
+		}
+		try
+		{
+			javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("TLS");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		}
+		catch (GeneralSecurityException e)
+		{
+		}
+
+		try
+		{
+			final Field theFactory = javax.net.ssl.SSLSocketFactory.class.getDeclaredField("theFactory");
+			theFactory.setAccessible(true);
+
+			javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("TLS");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+
+			theFactory.set(null, sc.getSocketFactory());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	private static void trustAllCertificatesOld()
+	{
+		com.sun.net.ssl.TrustManager[] trustAllCerts = new com.sun.net.ssl.TrustManager[]{
+				new com.sun.net.ssl.X509TrustManager()
+				{
+
+					@Override
+					public boolean isClientTrusted(X509Certificate[] x509Certificates)
+					{
+						return true;
+					}
+
+					@Override
+					public boolean isServerTrusted(X509Certificate[] x509Certificates)
+					{
+						return true;
+					}
+
+					@Override
+					public X509Certificate[] getAcceptedIssuers()
+					{
+						return new X509Certificate[0];
+					}
+				}
+		};
+
+		// Install the all-trusting trust manager
+		try
+		{
+			com.sun.net.ssl.SSLContext sc = com.sun.net.ssl.SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			com.sun.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		}
+		catch (GeneralSecurityException e)
+		{
+		}
+		try
+		{
+			com.sun.net.ssl.SSLContext sc = com.sun.net.ssl.SSLContext.getInstance("TLS");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			com.sun.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		}
+		catch (GeneralSecurityException e)
+		{
+		}
+
 
 	}
+
 }
