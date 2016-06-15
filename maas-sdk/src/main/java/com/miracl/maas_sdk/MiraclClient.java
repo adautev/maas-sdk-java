@@ -67,7 +67,7 @@ public class MiraclClient
 			this.redirectUrl = new URI(redirectUrl);
 			try
 			{
-				URI issuerURI = new URI("http://mpinaas-demo.miracl.net:8001");
+				URI issuerURI = new URI("https://api.dev.miracl.net");
 				URL providerConfigurationURL = issuerURI.resolve("/.well-known/openid-configuration").toURL();
 				InputStream stream = providerConfigurationURL.openStream();
 

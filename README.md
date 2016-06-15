@@ -58,17 +58,16 @@ user id), use `client.clearUserInfoAndSession(session)` to also clear user autho
 
 ### Authorization flow
 
-Authorization flow depends on `mpin.js` browser library. `mpin.js` depends on
-`jquery`.To use it, load it in `<head>` element of page responsible for login:
+Authorization flow depends on `mpad.js` browser library. To show login button:
+
+* Put div with distinct ID where login button should be
+* Create authorization URL by using `client.getAuthorizationRequestUrl(session)`
+* At the end of page body load `mpad.js` with parameters `data-authurl`
+(authorization URL) and `data-element` (login button ID)
 
 ```
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-    <script src="http://mpinaas-demo.miracl.net:8002/mpin/mpin.js"></script>
+<script src="https://demo.dev.miracl.net/mpin/mpad.js" data-authurl="{{ auth_url }}" data-element="btmpin"></script>
 ```
-
-If user is not authorized, authorization URL can be acquired from
-`client.getAuthorizationRequestUrl(session)`. Returned URL should be used with `mpin.js` login
-function `mpin.login({authURL: "< auth-url >"})`.
 
 After user interaction with Miracl system, user will be sent to `redirectUri` defined at
 creation of `MiraclClient` object.
