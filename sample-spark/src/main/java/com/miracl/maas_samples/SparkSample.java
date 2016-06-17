@@ -1,8 +1,13 @@
 package com.miracl.maas_samples;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonObject;
 import com.miracl.maas_sdk.MiraclClient;
 import com.mitchellbosecke.pebble.PebbleEngine;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
@@ -16,14 +21,10 @@ import spark.TemplateEngine;
 import spark.template.pebble.PebbleTemplateEngine;
 
 import static spark.Spark.get;
+import static spark.Spark.port;
 
 public class SparkSample
 {
-
-	public static final String CLIENT_ID = "CLIENT_ID";
-	public static final String CLIENT_SECRET = "CLIENT_SECRET";
-	public static final String REDIRECT_URL = "REDIRECT_URL";
-
 	public static ModelAndView renderTemplate(Session session, Map<String, Object> data)
 	{
 		Map<String, Object> params = new HashMap<>(data);
@@ -55,17 +56,24 @@ public class SparkSample
 		session.attribute("messages", messages);
 	}
 
-	public static void main(String[] args)
+	public static void main(String[] args) throws IOException
 	{
 		//TODO: Remove when not needed - temporary workaround
 		trustAllCertificatesOld();
 		trustAllCertificatesNew();
 
+		final InputStream configStream = SparkSample.class.getClassLoader().getResourceAsStream("miracl.json");
+		final JsonObject config = Json.parse(new InputStreamReader(configStream)).asObject();
+		String clientId = config.get("client_id").asString();
+		String secret = config.get("secret").asString();
+		String redirectUri = config.get("redirect_uri").asString();
+		configStream.close();
 
 		final PebbleEngine pebbleEngine = new PebbleEngine(new ResourcesLoader());
 		pebbleEngine.setStrictVariables(true);
 		final TemplateEngine templateEngine = new PebbleTemplateEngine(pebbleEngine);
-		MiraclClient miracl = new MiraclClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
+		port(5000);
+		MiraclClient miracl = new MiraclClient(clientId, secret, redirectUri);
 		get("/", (req, res) -> {
 			final MiraclSparkSessionWrapper preserver = new MiraclSparkSessionWrapper(req.session());
 			Map<String, Object> data = new HashMap<>();
@@ -228,8 +236,6 @@ public class SparkSample
 		catch (GeneralSecurityException e)
 		{
 		}
-
-
 	}
 
 }

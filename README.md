@@ -86,6 +86,12 @@ Each call to `MiraclClient` can raise `MiraclException`. `MiraclException` can b
 
 ## Samples
 
-Replace `CLIENT_ID`, `CLIENT_SECRET` and `REDIRECT_URI` with valid data.
+
+Configuration is located in `miracl.json`.
+
+Replace `CLIENT_ID`, `SECRET` and `REDIRECT_URI` with valid data from
+Miracl. Samples can be run after setup step is done.
+
+Redirect URI for this sample is `http://127.0.0.1:5000/c2id` if run locally.
 
 To run Spark sample, use `./gradlew sample-spark:run`
