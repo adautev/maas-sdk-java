@@ -60,6 +60,18 @@ public class MiraclClient
 	 */
 	public MiraclClient(String clientId, String clientSecret, String redirectUrl) throws MiraclException
 	{
+		this(clientId, clientSecret, redirectUrl, MiraclConfig.ISSUER);
+	}
+
+	/**
+	 * @param clientId     Client ID
+	 * @param clientSecret Client secret
+	 * @param redirectUrl  Redirect URL
+	 * @param issuer       Issuer URL
+	 * @throws MiraclException if parameters can't be parsed
+	 */
+	public MiraclClient(String clientId, String clientSecret, String redirectUrl, String issuer) throws MiraclException
+	{
 		try
 		{
 			this.clientId = new ClientID(clientId);
@@ -67,7 +79,7 @@ public class MiraclClient
 			this.redirectUrl = new URI(redirectUrl);
 			try
 			{
-				URI issuerURI = new URI("https://api.dev.miracl.net");
+				URI issuerURI = new URI(issuer);
 				URL providerConfigurationURL = issuerURI.resolve("/.well-known/openid-configuration").toURL();
 				InputStream stream = providerConfigurationURL.openStream();
 
