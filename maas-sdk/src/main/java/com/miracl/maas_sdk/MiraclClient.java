@@ -82,13 +82,7 @@ public class MiraclClient
 			{
 				URI issuerURI = new URI(issuer);
 				URL providerConfigurationURL = issuerURI.resolve("/.well-known/openid-configuration").toURL();
-				InputStream stream = providerConfigurationURL.openStream();
-
-				String providerInfo = null;
-				try (java.util.Scanner s = new java.util.Scanner(stream))
-				{
-					providerInfo = s.useDelimiter("\\A").hasNext() ? s.next() : "";
-				}
+				String providerInfo = requestProviderInfo(providerConfigurationURL);
 				providerMetadata = OIDCProviderMetadata.parse(providerInfo);
 
 			}
@@ -102,6 +96,18 @@ public class MiraclClient
 		{
 			throw new MiraclSystemException(e);
 		}
+	}
+
+	protected String requestProviderInfo(URL url) throws IOException
+	{
+		InputStream stream = url.openStream();
+
+		String providerInfo = null;
+		try (java.util.Scanner s = new java.util.Scanner(stream))
+		{
+			providerInfo = s.useDelimiter("\\A").hasNext() ? s.next() : "";
+		}
+		return providerInfo;
 	}
 
 	/**
