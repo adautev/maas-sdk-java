@@ -1,5 +1,6 @@
 package com.miracl.maas_sdk;
 
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -168,32 +169,37 @@ public class MiraclClient
 			final boolean stateOk = successResponse.getState().toString().equals(preserver.get(KEY_STATE));
 			if (stateOk)
 			{
-				TokenRequest tokenRequest = new TokenRequest(
-						providerMetadata.getTokenEndpointURI(),
-						new ClientSecretBasic(clientId, clientSecret),
-						new AuthorizationCodeGrant(((AuthenticationSuccessResponse) response).getAuthorizationCode(), redirectUrl)
-				);
-				final TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
-				if (tokenResponse instanceof TokenErrorResponse)
-				{
-					ErrorObject error = ((TokenErrorResponse) tokenResponse).getErrorObject();
-					throw new Error(error.getDescription());
-				}
-
-				OIDCTokenResponse accessTokenResponse = (OIDCTokenResponse) tokenResponse;
-				final AccessToken accessToken = accessTokenResponse.getOIDCTokens().getAccessToken();
-
-				preserver.put(KEY_TOKEN, accessToken.getValue());
-				return accessToken.getValue();
+				final String accessToken = requestAccessToken(((AuthenticationSuccessResponse) response).getAuthorizationCode());
+				preserver.put(KEY_TOKEN, accessToken);
+				return accessToken;
 			}
 		}
-		catch (ParseException | IOException e)
+		catch (ParseException | IOException | Error e)
 		{
 			e.printStackTrace();
 			throw new MiraclSystemException(e);
 		}
 
 		return null;
+	}
+
+	protected String requestAccessToken(AuthorizationCode authorizationCode) throws IOException, ParseException
+	{
+		TokenRequest tokenRequest = new TokenRequest(
+				providerMetadata.getTokenEndpointURI(),
+				new ClientSecretBasic(clientId, clientSecret),
+				new AuthorizationCodeGrant(authorizationCode, redirectUrl)
+		);
+		final TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
+		if (tokenResponse instanceof TokenErrorResponse)
+		{
+			ErrorObject error = ((TokenErrorResponse) tokenResponse).getErrorObject();
+			throw new MiraclClientException(error);
+		}
+
+		OIDCTokenResponse accessTokenResponse = (OIDCTokenResponse) tokenResponse;
+		final AccessToken accessToken = accessTokenResponse.getOIDCTokens().getAccessToken();
+		return accessToken.getValue();
 	}
 
 
@@ -221,7 +227,7 @@ public class MiraclClient
 		preserver.remove(KEY_TOKEN);
 	}
 
-	private UserInfo requestUserInfo(MiraclStatePreserver preserver) throws MiraclException
+	private UserInfo getUserInfo(MiraclStatePreserver preserver) throws MiraclException
 	{
 		if (preserver.get(KEY_TOKEN) == null)
 		{
@@ -243,24 +249,10 @@ public class MiraclClient
 			}
 		}
 
-		final BearerAccessToken accessToken = new BearerAccessToken(preserver.get(KEY_TOKEN));
-		UserInfoRequest userInfoReq = new UserInfoRequest(
-				providerMetadata.getUserInfoEndpointURI(),
-				accessToken);
 
 		try
 		{
-			HTTPResponse userInfoHTTPResp = userInfoReq.toHTTPRequest().send();
-			UserInfoResponse userInfoResponse = UserInfoResponse.parse(userInfoHTTPResp);
-
-			if (userInfoResponse instanceof UserInfoErrorResponse)
-			{
-				ErrorObject error = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
-				throw new MiraclClientException(error);
-			}
-
-			UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
-			final UserInfo userInfo = successResponse.getUserInfo();
+			UserInfo userInfo = requestUserInfo(preserver.get(KEY_TOKEN));
 			preserver.put(KEY_USERINFO, userInfo.toJSONObject().toJSONString());
 			return userInfo;
 
@@ -269,6 +261,26 @@ public class MiraclClient
 		{
 			throw new MiraclSystemException(e);
 		}
+	}
+
+	protected UserInfo requestUserInfo(String token) throws IOException, ParseException
+	{
+		final BearerAccessToken accessToken = new BearerAccessToken(token);
+		UserInfoRequest userInfoReq = new UserInfoRequest(
+				providerMetadata.getUserInfoEndpointURI(),
+				accessToken);
+
+		HTTPResponse userInfoHTTPResp = userInfoReq.toHTTPRequest().send();
+		UserInfoResponse userInfoResponse = UserInfoResponse.parse(userInfoHTTPResp);
+
+		if (userInfoResponse instanceof UserInfoErrorResponse)
+		{
+			ErrorObject error = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
+			throw new MiraclClientException(error);
+		}
+
+		UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
+		return successResponse.getUserInfo();
 	}
 
 	/**
@@ -282,7 +294,7 @@ public class MiraclClient
 	{
 		try
 		{
-			return requestUserInfo(preserver) != null;
+			return getUserInfo(preserver) != null;
 		}
 		catch (MiraclClientException e)
 		{
@@ -302,7 +314,7 @@ public class MiraclClient
 	 */
 	public String getEmail(MiraclStatePreserver preserver) throws MiraclException
 	{
-		final UserInfo userInfo = requestUserInfo(preserver);
+		final UserInfo userInfo = getUserInfo(preserver);
 		if (userInfo != null)
 		{
 			final String email = userInfo.getStringClaim("email");
@@ -331,7 +343,7 @@ public class MiraclClient
 	 */
 	public String getUserId(MiraclStatePreserver preserver) throws MiraclException
 	{
-		final UserInfo userInfo = requestUserInfo(preserver);
+		final UserInfo userInfo = getUserInfo(preserver);
 		if (userInfo != null)
 		{
 			final String sub = userInfo.getStringClaim("sub");

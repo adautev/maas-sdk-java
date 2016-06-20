@@ -13,7 +13,7 @@ public class MiraclSystemException extends MiraclException
 		super(message);
 	}
 
-	public MiraclSystemException(Exception e)
+	public MiraclSystemException(Throwable e)
 	{
 		super(e);
 	}

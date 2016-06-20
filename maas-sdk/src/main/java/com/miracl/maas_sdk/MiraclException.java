@@ -14,7 +14,7 @@ public abstract class MiraclException extends RuntimeException
 		super(message);
 	}
 
-	public MiraclException(Exception e)
+	public MiraclException(Throwable e)
 	{
 		super(e);
 	}
