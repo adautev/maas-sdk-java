@@ -29,7 +29,7 @@ public class MiraclClientTest
 	@BeforeMethod
 	public void setUp() throws Exception
 	{
-		client = new MiraclClient("MOCK_CLIENT", "MOCK_SECRET", "MOCK_URL");
+		client = new MiraclClientNoNetworkMock("MOCK_CLIENT", "MOCK_SECRET", "MOCK_URL");
 		preserver = new MiraclMapStatePreserver(new HashMap<>());
 	}
 
@@ -95,6 +95,23 @@ public class MiraclClientTest
 
 		Assert.assertEquals(client.getEmail(preserver), email);
 		Assert.assertEquals(client.getUserId(preserver), sub);
+	}
+
+	@Test
+	public void testAuthFlow() throws Exception
+	{
+		client.getAuthorizationRequestUrl(preserver);
+		final String miracl_state = preserver.get("miracl_state");
+		final String miracl_nonce = preserver.get("miracl_nonce");
+
+		String queryString = "state=" + miracl_state + "&nonce=" + miracl_nonce + "&code=MOCK_CODE";
+		String tokenInput = "MOCK_TOKEN";
+
+		String token = client.validateAuthorization(preserver, queryString);
+		Assert.assertEquals(tokenInput, token);
+		final String id = client.getUserId(preserver);
+		Assert.assertEquals(id, "MOCK_USER");
+
 	}
 
 	//TODO: Remove when not needed - temporary workaround
