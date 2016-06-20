@@ -98,6 +98,11 @@ public class MiraclClient
 		}
 	}
 
+	/**
+	 * @param url URL pointing to openid-configuration
+	 * @return String containing contents of URL
+	 * @throws IOException In case of network issues
+	 */
 	protected String requestProviderInfo(URL url) throws IOException
 	{
 		InputStream stream = url.openStream();
@@ -189,6 +194,12 @@ public class MiraclClient
 		return null;
 	}
 
+	/**
+	 * @param authorizationCode Authorization code from authorization query
+	 * @return Access token as string
+	 * @throws IOException In case of network issues
+	 * @throws ParseException In case of incorrect answer from backend
+	 */
 	protected String requestAccessToken(AuthorizationCode authorizationCode) throws IOException, ParseException
 	{
 		TokenRequest tokenRequest = new TokenRequest(
@@ -269,6 +280,12 @@ public class MiraclClient
 		}
 	}
 
+	/**
+	 * @param token Auth token (used in Bearer access header)
+	 * @return User info
+	 * @throws IOException In case of network issues
+	 * @throws ParseException In case of incorrect answer from backend
+	 */
 	protected UserInfo requestUserInfo(String token) throws IOException, ParseException
 	{
 		final BearerAccessToken accessToken = new BearerAccessToken(token);
