@@ -45,6 +45,6 @@ public class MiraclClientNoNetworkMock extends MiraclClient
 		{
 
 		}
-		return super.requestUserInfo(token);
+		return userInfo;
 	}
 }
