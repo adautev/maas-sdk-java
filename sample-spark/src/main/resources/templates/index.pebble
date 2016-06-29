@@ -74,7 +74,7 @@
         </div>
     {% endif %}
     {% if retry or not authorized %}
-    <script src="https://demo.dev.miracl.net/mpin/mpad.js" data-authurl="{{ authURL }}" data-element="btmpin"></script>
+        <script src="https://demo.stg.miracl.net/mpin/mpad.js" data-authurl="{{ authURL }}" data-element="btmpin"></script>
     {% endif %}
 </div>
 </body>
