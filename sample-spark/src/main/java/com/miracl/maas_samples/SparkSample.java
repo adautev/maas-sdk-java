@@ -158,10 +158,14 @@ public class SparkSample
 
 			if (token != null)
 			{
+				// Prepare model and view before setting message
+				final ModelAndView modelAndView = prepareModelAndView(req.session(), data);
 				// Show message about successful log in
 				flashMessage(req.session(), "success", "Successfully logged in");
 				// and redirect back to start
 				res.redirect("/");
+				// return model and view for template rendering
+				return modelAndView;
 			}
 			else
 			{
@@ -171,10 +175,9 @@ public class SparkSample
 				// Prepare model data to show login button for retry
 				data.put("retry", true);
 				data.put("authURL", miracl.getAuthorizationRequestUrl(preserver));
+				// return model and view for template rendering
+				return prepareModelAndView(req.session(), data);
 			}
-
-			// return model and view for template rendering
-			return prepareModelAndView(req.session(), data);
 		}, templateEngine);
 
 
