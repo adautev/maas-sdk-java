@@ -4,6 +4,9 @@ import com.miracl.maas_sdk.MiraclStatePreserver;
 
 import spark.Session;
 
+/**
+ * Session wrapper that uses Spark {@link Session} for preserving data
+ */
 public class MiraclSparkSessionWrapper implements MiraclStatePreserver
 {
 	private final Session session;

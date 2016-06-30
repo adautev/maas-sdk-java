@@ -8,6 +8,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 
+/**
+ * Resource loader for reading template from resources
+ */
 public class ResourcesLoader implements Loader
 {
 	private String charset = "UTF-8";
