@@ -1,0 +1,6 @@
+buildscript {
+    ext {
+        maas_version = "0.1-SNAPSHOT"
+        maas_group = 'com.miracl'
+    }
+}
