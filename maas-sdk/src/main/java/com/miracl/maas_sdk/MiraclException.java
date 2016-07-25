@@ -21,6 +21,7 @@ public abstract class MiraclException extends RuntimeException
 
 	public MiraclException(ErrorObject e)
 	{
-		super("Network error: " + (e != null ? e.getCode() + " " + e.getDescription() : "<null>"));
+		super(String.format(MiraclMessages.NETWORK_ERROR_EXCEPTION_DESC,
+		                    (e != null ? e.getCode() + " " + e.getDescription() : "<null>")));
 	}
 }

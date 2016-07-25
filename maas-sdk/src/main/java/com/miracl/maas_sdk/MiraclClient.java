@@ -248,7 +248,7 @@ public class MiraclClient
 	{
 		if (preserver.get(KEY_TOKEN) == null)
 		{
-			throw new MiraclClientException("User is not authorized");
+			throw new MiraclClientException(MiraclMessages.USER_NOT_AUTHORIZED);
 		}
 
 		if (preserver.get(KEY_USERINFO) != null)
