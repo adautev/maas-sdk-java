@@ -2,5 +2,5 @@ package com.miracl.maas_sdk;
 
 public class MiraclConfig
 {
-	public static final String ISSUER = "https://api.stg.miracl.net";
+	public static final String ISSUER = "https://api.mpin.io/api/v1";
 }
