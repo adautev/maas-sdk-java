@@ -116,9 +116,9 @@ public class MiraclClient
 	}
 
 	/**
-	 * Get {@link URI} for authorization request. URL should be used with mpin.js login function
-	 * mpin.login({authURL: "< auth-url >"}). After user is redirected back (to redirect URL defined in constructor),
-	 * call {@link #validateAuthorization(MiraclStatePreserver, String)} to complete authorization with server.
+	 * Get {@link URI} for authorization request. After user is redirected back (to redirect URL defined in
+	 * constructor), call {@link #validateAuthorization(MiraclStatePreserver, String)} to complete authorization
+	 * with server.
 	 *
 	 * @param preserver Miracl preserver object for current user
 	 * @return Request URI for mpin authorization. After request redirects back, pass queryString
@@ -248,7 +248,7 @@ public class MiraclClient
 	{
 		if (preserver.get(KEY_TOKEN) == null)
 		{
-			throw new MiraclClientException("User is not authorized");
+			throw new MiraclClientException(MiraclMessages.USER_NOT_AUTHORIZED);
 		}
 
 		if (preserver.get(KEY_USERINFO) != null)
