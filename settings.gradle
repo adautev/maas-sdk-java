@@ -1,0 +1,3 @@
+rootProject.name = 'maas'
+include ":maas-sdk"
+include ":sample-spark"
