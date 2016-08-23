@@ -1,3 +1,18 @@
+# maas-sdk-java
+
+[![Master Build Status](https://secure.travis-ci.org/miracl/maas-sdk-java.png?branch=master)](https://travis-ci.org/miracl/maas-sdk-java?branch=master)
+[![Master Coverage Status](https://coveralls.io/repos/miracl/maas-sdk-java/badge.svg?branch=master&service=github)](https://coveralls.io/github/miracl/maas-sdk-java?branch=master)
+
+* **category**:    SDK
+* **copyright**:   2016 MIRACL UK LTD
+* **license**:     ASL 2.0 - http://www.apache.org/licenses/LICENSE-2.0
+* **link**:        https://github.com/miracl/maas-sdk-java
+
+## Description
+
+Java version of the Software Development Kit (SDK) for MPin-As-A-Service (MAAS).
+
+
 # Setup
 
 Current sdk version is `0.1-SNAPSHOT`. Replace `VERSION` with needed version in examples.
