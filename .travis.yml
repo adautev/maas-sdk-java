@@ -13,7 +13,7 @@ branches:
     - travis
 
 jdk:
-  - openjdk7
+  - openjdk8
   - oraclejdk8
 
 matrix:
@@ -33,4 +33,4 @@ script:
   - ./gradlew clean build --stacktrace --info
 
 after_success:
-  - if [ "$TRAVIS_JDK_VERSION" = "openjdk7" ]; then ./gradlew cobertura coveralls; fi;
+  - if [ "$TRAVIS_JDK_VERSION" = "oraclejdk8" ]; then ./gradlew cobertura coveralls; fi;
