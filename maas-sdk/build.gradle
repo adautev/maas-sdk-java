@@ -18,7 +18,6 @@ repositories {
 dependencies {
     compile 'com.nimbusds:oauth2-oidc-sdk:5.7'
     testCompile 'org.testng:testng:6.1.1'
-    testRuntime "org.slf4j:slf4j-log4j12:1.7.5"
 }
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava
