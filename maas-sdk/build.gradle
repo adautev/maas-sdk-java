@@ -1,10 +1,8 @@
 plugins {
-    id 'net.saliman.cobertura' version '2.3.2'
+    id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.6.3'
 }
-cobertura {
-    coverageFormats = ['html', 'xml']
-}
+
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
@@ -42,5 +40,12 @@ publishing {
                 classifier "sources"
             }
         }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
     }
 }

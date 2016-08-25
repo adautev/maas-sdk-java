@@ -29,7 +29,7 @@ before_install:
   - if [ -n "$GH_TOKEN" ]; then git config --global github.token ${GH_TOKEN}; fi;
 
 script:
-  - ./gradlew clean build --stacktrace --info
+  - ./gradlew clean build test --stacktrace --info
 
 after_success:
-  - if [ "$TRAVIS_JDK_VERSION" = "oraclejdk8" ]; then ./gradlew cobertura coveralls; fi;
+  - if [ "$TRAVIS_JDK_VERSION" = "oraclejdk8" ]; then ./gradlew jacocoTestReport coveralls; fi;
