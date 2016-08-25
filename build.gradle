@@ -1,19 +1,6 @@
-
 buildscript {
     ext {
         maas_version = "0.1-SNAPSHOT"
         maas_group = 'com.miracl'
     }
 }
-plugins {
-    id 'net.saliman.cobertura' version '2.3.2'
-    id 'com.github.kt3k.coveralls' version '2.6.3'
-}
-repositories {
-    jcenter()
-    mavenLocal()
-    mavenCentral()
-}
-cobertura.coverageFormats = ['html', 'xml']
-
-
