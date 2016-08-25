@@ -13,7 +13,6 @@ branches:
     - travis
 
 jdk:
-  - openjdk8
   - oraclejdk8
 
 matrix:
