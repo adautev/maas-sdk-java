@@ -13,7 +13,7 @@
 Java version of the Software Development Kit (SDK) for MPin-As-A-Service (MAAS).
 
 
-# Setup
+## Setup
 
 Current sdk version is `0.1-SNAPSHOT`. Replace `VERSION` with needed version in examples.
 

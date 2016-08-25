@@ -1,0 +1,36 @@
+language: java
+
+sudo: false
+
+branches:
+  except:
+    - release
+
+branches:
+  only:
+    - master
+    - develop
+    - travis
+
+jdk:
+  - openjdk7
+  - oraclejdk8
+
+matrix:
+  allow_failures:
+    - jdk: nightly
+
+addons:
+  apt:
+    packages:
+    - build-essential
+
+before_install:
+  - if [ -n "$GH_USER" ]; then git config --global github.user ${GH_USER}; fi;
+  - if [ -n "$GH_TOKEN" ]; then git config --global github.token ${GH_TOKEN}; fi;
+
+script:
+  - ./gradlew clean build --stacktrace --info
+
+after_success:
+  - if [ "$TRAVIS_JDK_VERSION" = "openjdk7" ]; then ./gradlew cobertura coveralls; fi;
