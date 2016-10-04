@@ -81,8 +81,10 @@ Authorization flow depends on `mpad.js` browser library. To show login button:
 (authorization URL) and `data-element` (login button ID)
 
 ```
-<script src="https://dd.cdn.mpin.io/mpad/mpad.js" data-authurl="{{ auth_url }}" data-element="btmpin"></script>
+<script src="<<Insert correct mpad url here>>" data-authurl="{{ auth_url }}" data-element="btmpin"></script>
 ```
+
+Please refer to your distributor-specific documentation to find the correct url for the mpad.js `script src`
 
 After user interaction with Miracl system, user will be sent to `redirectUri` defined at
 creation of `MiraclClient` object.
