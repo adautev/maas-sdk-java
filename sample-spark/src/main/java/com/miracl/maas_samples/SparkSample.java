@@ -133,7 +133,7 @@ public class SparkSample
 		}, templateEngine);
 
 		// Callback handler - process callback from login process
-		get("/c2id", (req, res) ->
+		get("/login", (req, res) ->
 		{
 			// Construct session wrapper for Miracl
 			final MiraclSparkSessionWrapper preserver = new MiraclSparkSessionWrapper(req.session());
