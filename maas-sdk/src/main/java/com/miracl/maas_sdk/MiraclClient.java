@@ -97,6 +97,22 @@ public class MiraclClient
 			throw new MiraclSystemException(e);
 		}
 	}
+	
+	/**
+	 * Use a proxy for all out-going requests performed by the library.
+	 * 
+	 * If a proxy server is required, useProxy should be called immediately
+	 * after constructing a MiraclClient. Proxy settings are applied VM-wide.
+	 * The proxy will be used for both HTTP and HTTPS requests.
+	 * @param host Hostname for the proxy server, for example "localhost"
+	 * @param port Port for the proxy server
+	 */
+	public static void useProxy(String host, String port) {
+		System.setProperty("http.proxyHost", host);
+		System.setProperty("https.proxyHost", host);
+		System.setProperty("http.proxyPort", port);
+		System.setProperty("https.proxyPort", port);		
+	}
 
 	/**
 	 * @param url URL pointing to openid-configuration

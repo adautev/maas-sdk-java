@@ -25,6 +25,7 @@ import static spark.Spark.port;
  */
 public class SparkSample
 {
+	
 	/**
 	 * Utility function to prepare model and view for page rendering.
 	 *
@@ -90,6 +91,11 @@ public class SparkSample
 		String clientId = config.get("client_id").asString();
 		String secret = config.get("secret").asString();
 		String redirectUri = config.get("redirect_uri").asString();
+		
+		boolean useProxy = config.getBoolean("use_proxy", false);
+		String proxyHost = config.getString("proxy_host", "localhost");
+		String proxyPort = config.getString("proxy_port", "8888");
+		
 		configStream.close();
 
 		// Prepare template engine
@@ -102,6 +108,9 @@ public class SparkSample
 
 		// Prepare Miracl client instance
 		MiraclClient miracl = new MiraclClient(clientId, secret, redirectUri);
+		if (useProxy) {
+			MiraclClient.useProxy(proxyHost, proxyPort);
+		}
 
 		// Main request handler - show login button or user data
 		get("/", (req, res) ->

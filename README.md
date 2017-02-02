@@ -94,6 +94,12 @@ To complete authorization pass query string received on `redirectUri` to
 token if authorization succeeded. Token is preserved in `session` so there
 is no need to save token elsewhere.
 
+### Proxy server support
+
+A proxy server can be used by calling the `useProxy(host, port)` method found in `MiraclClient`.
+Proxy support is handled by the standard [Java Networking API](https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html).
+You can consult the included code samples to see how proxy server configuration can be passed into your application.
+
 ### Problems and exceptions
 
 Each call to `MiraclClient` can raise `MiraclException`. `MiraclException` can be

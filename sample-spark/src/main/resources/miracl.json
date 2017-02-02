@@ -1,5 +1,8 @@
 {
   "client_id": "CLIENT_ID",
   "secret": "SECRET",
-  "redirect_uri": "REDIRECT_URI"
+  "redirect_uri": "REDIRECT_URI",
+  "use_proxy": false,
+  "proxy_host": "PROXY_HOST",
+  "proxy_port": "PROXY_PORT"
 }

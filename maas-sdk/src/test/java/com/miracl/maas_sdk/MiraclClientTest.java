@@ -113,6 +113,16 @@ public class MiraclClientTest
 		Assert.assertEquals(id, "MOCK_USER");
 
 	}
+	
+	@Test
+	public static void testUseProxy() throws Exception {
+		MiraclClient.useProxy("localhost", "8888");
+		
+		Assert.assertEquals(System.getProperty("http.proxyHost"), "localhost");
+		Assert.assertEquals(System.getProperty("https.proxyHost"), "localhost");
+		Assert.assertEquals(System.getProperty("http.proxyPort"), "8888");
+		Assert.assertEquals(System.getProperty("https.proxyPort"), "8888");
+	}
 
 	//TODO: Remove when not needed - temporary workaround
 	private static void trustAllCertificatesNew()
