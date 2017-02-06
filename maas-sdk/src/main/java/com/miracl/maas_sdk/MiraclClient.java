@@ -203,11 +203,8 @@ public class MiraclClient {
 	public String validateAuthorization(MiraclStatePreserver preserver, String queryString) {
 		try {
 			final AuthenticationResponse response;
-			try {
-				response = AuthenticationResponseParser.parse(URI.create("/?" + queryString));
-			} catch (ParseException e) {
-				throw new MiraclClientException(e);
-			}
+			response = parseAuthenticationResponse(queryString);
+
 			if (response instanceof AuthenticationErrorResponse) {
 				ErrorObject error = ((AuthenticationErrorResponse) response).getErrorObject();
 				throw new MiraclClientException(error.getDescription());
@@ -216,6 +213,7 @@ public class MiraclClient {
 			AuthenticationSuccessResponse successResponse = (AuthenticationSuccessResponse) response;
 
 			final boolean stateOk = successResponse.getState().toString().equals(preserver.get(KEY_STATE));
+
 			if (stateOk) {
 				final String accessToken = requestAccessToken(
 						((AuthenticationSuccessResponse) response).getAuthorizationCode());
@@ -228,6 +226,16 @@ public class MiraclClient {
 		}
 
 		return null;
+	}
+	
+	protected AuthenticationResponse parseAuthenticationResponse(String queryString) {
+		URI uri = URI.create("/?" + queryString);
+
+		try {
+			return AuthenticationResponseParser.parse(uri);
+		} catch (ParseException e) {
+			throw new MiraclClientException(e);
+		}
 	}
 
 	/**
