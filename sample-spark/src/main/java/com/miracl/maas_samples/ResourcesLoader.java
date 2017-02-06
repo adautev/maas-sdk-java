@@ -11,44 +11,36 @@ import java.io.UnsupportedEncodingException;
 /**
  * Resource loader for reading template from resources
  */
-public class ResourcesLoader implements Loader
-{
+public class ResourcesLoader implements Loader {
 	private String charset = "UTF-8";
 	private String prefix = "";
 	private String suffix = "";
 
 	@Override
-	public Reader getReader(String templateName) throws LoaderException
-	{
-		try
-		{
+	public Reader getReader(String templateName) throws LoaderException {
+		try {
 			final String name = prefix + templateName + suffix;
 			final InputStream resourceAsStream = ResourcesLoader.class.getClassLoader().getResourceAsStream(name);
 			return new InputStreamReader(resourceAsStream, charset);
-		}
-		catch (UnsupportedEncodingException e)
-		{
+		} catch (UnsupportedEncodingException e) {
 			throw new LoaderException(e, "Template reader was not created");
 		}
 	}
 
 	@Override
-	public void setCharset(String charset)
-	{
+	public void setCharset(String charset) {
 
 		this.charset = charset;
 	}
 
 	@Override
-	public void setPrefix(String prefix)
-	{
+	public void setPrefix(String prefix) {
 
 		this.prefix = prefix;
 	}
 
 	@Override
-	public void setSuffix(String suffix)
-	{
+	public void setSuffix(String suffix) {
 
 		this.suffix = suffix;
 	}

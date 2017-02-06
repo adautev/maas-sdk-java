@@ -11,38 +11,32 @@ import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
-public class MiraclClientTest
-{
+public class MiraclClientTest {
 
 	MiraclClient client;
 	MiraclStatePreserver preserver;
 
 	@BeforeClass
-	public void setUpClass() throws Exception
-	{
-		//TODO: Remove when not needed - temporary workaround
+	public void setUpClass() throws Exception {
+		// TODO: Remove when not needed - temporary workaround
 		trustAllCertificatesOld();
 		trustAllCertificatesNew();
 	}
 
-
 	@BeforeMethod
-	public void setUp() throws Exception
-	{
+	public void setUp() throws Exception {
 		client = new MiraclClientNoNetworkMock("MOCK_CLIENT", "MOCK_SECRET", "MOCK_URL");
 		preserver = new MiraclMapStatePreserver(new HashMap<>());
 	}
 
 	@AfterMethod
-	public void tearDown() throws Exception
-	{
+	public void tearDown() throws Exception {
 		client = null;
 		preserver = null;
 	}
 
 	@Test
-	public void testGetAuthorizationRequestUrl() throws Exception
-	{
+	public void testGetAuthorizationRequestUrl() throws Exception {
 		final String authorizationRequestUrl = client.getAuthorizationRequestUrl(preserver).toASCIIString();
 		final String miracl_state = preserver.get("miracl_state");
 		Assert.assertNotNull(miracl_state);
@@ -53,16 +47,14 @@ public class MiraclClientTest
 	}
 
 	@Test
-	public void testClearUserInfo() throws Exception
-	{
+	public void testClearUserInfo() throws Exception {
 		preserver.put("miracl_userinfo", "data");
 		client.clearUserInfo(preserver);
 		Assert.assertNull(preserver.get("miracl_userinfo"));
 	}
 
 	@Test
-	public void testClearUserInfoAndSession() throws Exception
-	{
+	public void testClearUserInfoAndSession() throws Exception {
 		preserver.put("miracl_userinfo", "data");
 		preserver.put("miracl_token", "data");
 		client.clearUserInfoAndSession(preserver);
@@ -72,8 +64,7 @@ public class MiraclClientTest
 	}
 
 	@Test
-	public void testIsAuthorized() throws Exception
-	{
+	public void testIsAuthorized() throws Exception {
 		Assert.assertFalse(client.isAuthorized(preserver));
 		preserver.put("miracl_token", "MOCK_TOKEN");
 		String email = "a@b.c";
@@ -86,8 +77,7 @@ public class MiraclClientTest
 	}
 
 	@Test
-	public void testGetEmailAndUserID() throws Exception
-	{
+	public void testGetEmailAndUserID() throws Exception {
 		preserver.put("miracl_token", "MOCK_TOKEN");
 		String email = "a@b.c";
 		String sub = "123";
@@ -98,8 +88,7 @@ public class MiraclClientTest
 	}
 
 	@Test
-	public void testAuthFlow() throws Exception
-	{
+	public void testAuthFlow() throws Exception {
 		client.getAuthorizationRequestUrl(preserver);
 		final String miracl_state = preserver.get("miracl_state");
 		final String miracl_nonce = preserver.get("miracl_nonce");
@@ -113,62 +102,49 @@ public class MiraclClientTest
 		Assert.assertEquals(id, "MOCK_USER");
 
 	}
-	
+
 	@Test
 	public static void testUseProxy() throws Exception {
 		MiraclClient.useProxy("localhost", "8888");
-		
+
 		Assert.assertEquals(System.getProperty("http.proxyHost"), "localhost");
 		Assert.assertEquals(System.getProperty("https.proxyHost"), "localhost");
 		Assert.assertEquals(System.getProperty("http.proxyPort"), "8888");
 		Assert.assertEquals(System.getProperty("https.proxyPort"), "8888");
 	}
 
-	//TODO: Remove when not needed - temporary workaround
-	private static void trustAllCertificatesNew()
-	{
-		javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
-				new javax.net.ssl.X509TrustManager()
-				{
-					public java.security.cert.X509Certificate[] getAcceptedIssuers()
-					{
+	// TODO: Remove when not needed - temporary workaround
+	private static void trustAllCertificatesNew() {
+		javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[] {
+				new javax.net.ssl.X509TrustManager() {
+					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
 						return new X509Certificate[0];
 					}
 
-					public void checkClientTrusted(
-							java.security.cert.X509Certificate[] certs, String authType)
-					{
+					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+						// No validation is needed in tests
 					}
 
-					public void checkServerTrusted(
-							java.security.cert.X509Certificate[] certs, String authType)
-					{
+					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+						// No validation is needed in tests
 					}
-				}
-		};
+				} };
 
 		// Install the all-trusting trust manager
-		try
-		{
+		try {
 			javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("SSL");
 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
 			javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} catch (GeneralSecurityException expected) {
 		}
-		catch (GeneralSecurityException e)
-		{
-		}
-		try
-		{
+		try {
 			javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("TLS");
 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
 			javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-		}
-		catch (GeneralSecurityException e)
-		{
+		} catch (GeneralSecurityException expected) {
 		}
 
-		try
-		{
+		try {
 			final Field theFactory = javax.net.ssl.SSLSocketFactory.class.getDeclaredField("theFactory");
 			theFactory.setAccessible(true);
 
@@ -176,57 +152,43 @@ public class MiraclClientTest
 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
 
 			theFactory.set(null, sc.getSocketFactory());
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	private static void trustAllCertificatesOld()
-	{
-		com.sun.net.ssl.TrustManager[] trustAllCerts = new com.sun.net.ssl.TrustManager[]{
-				new com.sun.net.ssl.X509TrustManager()
-				{
+	private static void trustAllCertificatesOld() {
+		com.sun.net.ssl.TrustManager[] trustAllCerts = new com.sun.net.ssl.TrustManager[] {
+				new com.sun.net.ssl.X509TrustManager() {
 
 					@Override
-					public boolean isClientTrusted(X509Certificate[] x509Certificates)
-					{
+					public boolean isClientTrusted(X509Certificate[] x509Certificates) {
 						return true;
 					}
 
 					@Override
-					public boolean isServerTrusted(X509Certificate[] x509Certificates)
-					{
+					public boolean isServerTrusted(X509Certificate[] x509Certificates) {
 						return true;
 					}
 
 					@Override
-					public X509Certificate[] getAcceptedIssuers()
-					{
+					public X509Certificate[] getAcceptedIssuers() {
 						return new X509Certificate[0];
 					}
-				}
-		};
+				} };
 
 		// Install the all-trusting trust manager
-		try
-		{
+		try {
 			com.sun.net.ssl.SSLContext sc = com.sun.net.ssl.SSLContext.getInstance("SSL");
 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
 			com.sun.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} catch (GeneralSecurityException e) {
 		}
-		catch (GeneralSecurityException e)
-		{
-		}
-		try
-		{
+		try {
 			com.sun.net.ssl.SSLContext sc = com.sun.net.ssl.SSLContext.getInstance("TLS");
 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
 			com.sun.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-		}
-		catch (GeneralSecurityException e)
-		{
+		} catch (GeneralSecurityException e) {
 		}
 	}
 }
