@@ -1,5 +1,16 @@
 package com.miracl.maas_sdk;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.jwk.source.RemoteJWKSet;
+import com.nimbusds.jose.proc.BadJOSEException;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -34,6 +45,7 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -227,7 +239,7 @@ public class MiraclClient {
 
 		return null;
 	}
-	
+
 	protected AuthenticationResponse parseAuthenticationResponse(String queryString) {
 		URI uri = URI.create("/?" + queryString);
 
@@ -404,5 +416,131 @@ public class MiraclClient {
 
 		final String sub = userInfo.getStringClaim("sub");
 		return sub == null ? "" : sub;
+	}
+
+	/**
+	 * Create a JWT processor that can be used to verify tokens and extract
+	 * claims.
+	 * 
+	 * @param algorithm
+	 *            JWS algorithm to use
+	 * @param keySourceUrl
+	 *            URL to retrieve a remote JWK set from
+	 * @return A DefaultJWTProcessor
+	 * @throws MiraclClientException
+	 *             When the remote JWK URL is not valid
+	 */
+	public ConfigurableJWTProcessor<SecurityContext> buildJwtProcessor(JWSAlgorithm algorithm, String keySourceUrl) {
+		ConfigurableJWTProcessor<SecurityContext> processor;
+		JWKSource<SecurityContext> keySource;
+		JWSKeySelector<SecurityContext> keySelector;
+		URL url;
+		
+		try {
+			url = new URL(keySourceUrl);
+		} catch(MalformedURLException e) {
+			throw new MiraclClientException(e);
+		}
+
+		processor = new DefaultJWTProcessor<>();
+		keySource = new RemoteJWKSet<>(url);
+		keySelector = new JWSVerificationKeySelector<>(algorithm, keySource);
+		processor.setJWSKeySelector(keySelector);
+
+		return processor;
+	}
+
+	/**
+	 * Extracts and returns a JWT's claims.
+	 * 
+	 * @param keySourceUrl
+	 *            URL to retrieve a remote JWK set from
+	 * @param algorithm
+	 *            JWS algorithm to use
+	 * @param token
+	 *            JSON Web Token to validate
+	 * @return The JWT's claims
+	 * @throws MiraclClientException
+	 *             When the remote JWK URL is not valid
+	 * @throws java.text.ParseException
+	 *             When the token cannot be parsed into a JWT
+	 * @throws BadJOSEException
+	 *             If the JWT is rejected
+	 * @throws JOSEException
+	 *             If there was an error processing the JWT
+	 */
+	public JWTClaimsSet extractClaims(String keySourceUrl, JWSAlgorithm algorithm, String token)
+			throws java.text.ParseException, BadJOSEException, JOSEException {
+
+		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = buildJwtProcessor(algorithm, keySourceUrl);
+		return jwtProcessor.process(token, null);
+	}
+
+	/**
+	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
+	 * cannot.
+	 * 
+	 * @param keySourceUrl
+	 *            URL to retrieve a remote JWK set from
+	 * @param algorithm
+	 *            JWS algorithm to use
+	 * @param token
+	 *            JSON Web Token to validate
+	 * @throws MiraclClientException
+	 *             When the remote JWK URL is not valid
+	 * @throws MiraclSystemException
+	 *             When the token could not be validated
+	 */
+	public void validateToken(String keySourceUrl, JWSAlgorithm algorithm, String token) {
+		try {
+			extractClaims(keySourceUrl, algorithm, token);
+		} catch (java.text.ParseException | BadJOSEException | JOSEException e) {
+			throw new MiraclSystemException(e);
+		}
+	}
+
+	/**
+	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
+	 * cannot. This method will use the default URL configuration seen in {@link MiraclConfig}.
+	 * 
+	 * @param algorithm
+	 *            JWS algorithm to use
+	 * @param token
+	 *            JSON Web Token to validate
+	 * @throws MiraclClientException
+	 *             When the remote JWK URL is not valid
+	 * @throws MiraclSystemException
+	 *             When the token could not be validated
+	 */
+	public void validateToken(JWSAlgorithm algorithm, String token) {
+		String keySourceUrl = MiraclConfig.ISSUER + MiraclConfig.CERTS_API_ENDPOINT;
+		validateToken(keySourceUrl, algorithm, token);
+	}
+	
+	/**
+	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
+	 * cannot. This method will use the default URL configuration seen in {@link MiraclConfig}.
+	 * 
+	 * @param algorithm
+	 *            Name of the JWS algorithm to use
+	 * @param token
+	 *            JSON Web Token to validate
+	 * @throws MiraclClientException
+	 *             When the remote JWK URL is not valid
+	 * @throws MiraclSystemException
+	 *             When the token could not be validated
+	 */
+	public void validateToken(String algorithm, String token) {
+		JWSAlgorithm jwsAlgorithm = getJWSAlgorithm(algorithm);
+		validateToken(jwsAlgorithm, token);
+	}
+	
+	/**
+	 * Get a JWSAlgorithm by its name.
+	 * @param name
+	 * @return
+	 */
+	public JWSAlgorithm getJWSAlgorithm(String name) {
+		return new JWSAlgorithm(name);
 	}
 }

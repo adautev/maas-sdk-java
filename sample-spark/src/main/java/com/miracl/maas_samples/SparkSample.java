@@ -3,6 +3,7 @@ package com.miracl.maas_samples;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.miracl.maas_sdk.MiraclClient;
+import com.miracl.maas_sdk.MiraclException;
 import com.mitchellbosecke.pebble.PebbleEngine;
 
 import java.io.IOException;
@@ -29,6 +30,11 @@ public class SparkSample {
 	private static final String MESSAGES_ATTRIBUTE = "messages";
 	private static final String RETRY_ATTRIBUTE = "retry";
 	private static final String AUTHORIZED_ATTRIBUTE = "authorized";
+	private static final String ROOT_URL = "/";
+
+	private static final int DEFAULT_HOST = 5000;
+	private static final String DEFAULT_PROXY_HOST = "localhost";
+	private static final String DEFAULT_PROXY_PORT = "8888";
 
 	private SparkSample() {
 	}
@@ -131,23 +137,40 @@ public class SparkSample {
 		// Request validation of authorization data, retrieving token
 		final String token = client.validateAuthorization(preserver, req.queryString());
 
-		if (token != null) {
-			// Prepare model and view before setting message
-			final ModelAndView modelAndView = prepareModelAndView(req.session(), data);
-			// Show message about successful log in
-			flashMessage(req.session(), "success", "Successfully logged in");
-			// and redirect back to start
-			resp.redirect("/");
-			// return model and view for template rendering
-			return modelAndView;
+		if (token == null) {
+			return failLogin(client, preserver, req, resp);
 		}
+
+		// Validate the JWT you received
+		try {
+			client.validateToken("RS256", token);
+		} catch (MiraclException e) {
+			return failLogin(client, preserver, req, resp);
+		}
+
+		// Prepare model and view before setting message
+		final ModelAndView modelAndView = prepareModelAndView(req.session(), data);
+		// Show message about successful log in
+		flashMessage(req.session(), "success", "Successfully logged in");
+		// and redirect back to start
+		resp.redirect(ROOT_URL);
+		// return model and view for template rendering
+		return modelAndView;
+	}
+
+	// Prepare a ModelAndView for returning whenever logging in failed
+	private static ModelAndView failLogin(MiraclClient client, MiraclSparkSessionWrapper preserver, Request req,
+			Response resp) {
+
+		// Model data for template
+		Map<String, Object> data = new HashMap<>();
 
 		// Show message about fail to log in
 		flashMessage(req.session(), "danger", "Login failed!");
 
-		// Prepare model data to show login button for retry
 		data.put(RETRY_ATTRIBUTE, true);
 		data.put("authURL", client.getAuthorizationRequestUrl(preserver));
+
 		// return model and view for template rendering
 		return prepareModelAndView(req.session(), data);
 	}
@@ -159,7 +182,7 @@ public class SparkSample {
 		// Clear user info. It will be re-retrieved when requested
 		client.clearUserInfo(preserver);
 		// Redirect back to start
-		resp.redirect("/");
+		resp.redirect(ROOT_URL);
 		// Return nothing to render as redirect already have prepared response
 		return "";
 	}
@@ -173,7 +196,7 @@ public class SparkSample {
 		// Notify user about log out
 		flashMessage(req.session(), "info", "User logged out!");
 		// Redirect back to start
-		resp.redirect("/");
+		resp.redirect(ROOT_URL);
 		// Return nothing to render as redirect already have prepared response
 		return "";
 	}
@@ -190,14 +213,15 @@ public class SparkSample {
 
 	public static void main(String[] args) throws IOException {
 		final JsonObject config = readConfiguration();
+
 		String clientId = config.get("client_id").asString();
 		String secret = config.get("secret").asString();
 		String redirectUri = config.get("redirect_uri").asString();
-		int serverPort = config.getInt("serverPort", 5000);
+		int serverPort = config.getInt("serverPort", DEFAULT_HOST);
 
 		boolean useProxy = config.getBoolean("use_proxy", false);
-		String proxyHost = config.getString("proxy_host", "localhost");
-		String proxyPort = config.getString("proxy_port", "8888");
+		String proxyHost = config.getString("proxy_host", DEFAULT_PROXY_HOST);
+		String proxyPort = config.getString("proxy_port", DEFAULT_PROXY_PORT);
 
 		// Prepare template engine
 		final PebbleEngine pebbleEngine = new PebbleEngine(new ResourcesLoader());
@@ -213,8 +237,8 @@ public class SparkSample {
 		if (useProxy) {
 			MiraclClient.useProxy(proxyHost, proxyPort);
 		}
-		
-		get("/", (req, res) -> handleMainRequest(miracl, req), templateEngine);
+
+		get(ROOT_URL, (req, res) -> handleMainRequest(miracl, req), templateEngine);
 		get("/login", (req, res) -> handleLoginRequest(miracl, req, res), templateEngine);
 		get("/refresh", (req, res) -> handleRefreshRequest(miracl, req, res));
 		get("/logout", (req, res) -> handleLogoutRequest(miracl, req, res));

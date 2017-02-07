@@ -4,7 +4,7 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 
 /**
  * Exception that is related to user data and Miracl system failure responses.
- * Usually this exception mean that data passed to MiraclClient (via parameters
+ * Usually this exception means that data passed to MiraclClient (via parameters
  * or {@link MiraclStatePreserver preserver}) are incorrect or in wrong state.
  */
 public class MiraclClientException extends MiraclException {
