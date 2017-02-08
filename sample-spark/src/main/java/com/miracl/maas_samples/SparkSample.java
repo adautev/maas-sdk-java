@@ -12,6 +12,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import spark.ModelAndView;
 import spark.Request;
@@ -35,6 +37,8 @@ public class SparkSample {
 	private static final int DEFAULT_HOST = 5000;
 	private static final String DEFAULT_PROXY_HOST = "localhost";
 	private static final String DEFAULT_PROXY_PORT = "8888";
+	
+	private static final Logger LOGGER = Logger.getLogger(SparkSample.class.getName());
 
 	private SparkSample() {
 	}
@@ -145,6 +149,7 @@ public class SparkSample {
 		try {
 			client.validateToken("RS256", token);
 		} catch (MiraclException e) {
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			return failLogin(client, preserver, req, resp);
 		}
 

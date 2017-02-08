@@ -1,17 +1,34 @@
 package com.miracl.maas_sdk;
 
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.id.Subject;
+import com.nimbusds.openid.connect.sdk.UserInfoRequest;
+import com.nimbusds.openid.connect.sdk.UserInfoResponse;
+import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
+
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONValue;
 
 import org.testng.Assert;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 public class MiraclClientNoNetworkMock extends MiraclClient {
 	public MiraclClientNoNetworkMock(String clientId, String clientSecret, String redirectUrl) throws MiraclException {
@@ -33,16 +50,44 @@ public class MiraclClientNoNetworkMock extends MiraclClient {
 		Assert.assertEquals(authorizationCode.getValue(), "MOCK_CODE");
 		return "MOCK_TOKEN";
 	}
+	
+	@Override
+	protected UserInfoResponse doUserInfoRequest(UserInfoRequest request) throws IOException, ParseException {
+		URI uri;
+	    String jsonText;
+	    
+	    try {
+	    	uri = getClass().getClassLoader().getResource("jwt.json").toURI();
+	    } catch(URISyntaxException e) {
+	    	Assert.fail("Could not read jwt.json");
+	    	return null;
+	    }
+	    
+	    jsonText = Files.lines(Paths.get(uri)).collect(Collectors.joining());
+	    JSONObject json = (JSONObject) JSONValue.parse(jsonText);
+	    
+		return new UserInfoSuccessResponse(new UserInfo(json));
+	}
 
 	@Override
-	protected UserInfo requestUserInfo(String token) throws IOException, ParseException {
-		Assert.assertEquals("MOCK_TOKEN", token);
-		UserInfo userInfo = new UserInfo(new Subject("MOCK_USER"));
-		try {
-			userInfo.setEmail(new InternetAddress("mock@user.none"));
-		} catch (AddressException ignored) {
+	public ConfigurableJWTProcessor<SecurityContext> buildJwtProcessor(JWSAlgorithm algorithm, String keySourceUrl) {
+		ConfigurableJWTProcessor<SecurityContext> processor;
+		JWKSource<SecurityContext> keySource;
+		JWKSet keySet;
+		JWSKeySelector<SecurityContext> keySelector;
+		
+		File file = new File(getClass().getClassLoader().getResource("jwk.json").getFile());
 
+		try {
+			processor = new DefaultJWTProcessor<>();
+			keySet = JWKSet.load(file);
+			keySource = new ImmutableJWKSet<>(keySet);
+			keySelector = new JWSVerificationKeySelector<>(algorithm, keySource);
+			processor.setJWSKeySelector(keySelector);
+
+			return processor;
+		} catch (IOException | java.text.ParseException e) {
+			return null;
 		}
-		return userInfo;
 	}
 }

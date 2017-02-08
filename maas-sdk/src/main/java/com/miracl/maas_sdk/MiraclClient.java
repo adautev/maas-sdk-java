@@ -95,11 +95,11 @@ public class MiraclClient {
 	 *             if parameters can't be parsed
 	 */
 	public MiraclClient(String clientId, String clientSecret, String redirectUrl, String issuer) {
-		try {
-			this.clientId = new ClientID(clientId);
-			this.clientSecret = new Secret(clientSecret);
-			this.redirectUrl = new URI(redirectUrl);
+		this.clientId = new ClientID(clientId);
+		this.clientSecret = new Secret(clientSecret);
 
+		try {
+			this.redirectUrl = new URI(redirectUrl);
 			providerMetadata = getProviderMetadata(issuer);
 		} catch (URISyntaxException | ParseException | IOException e) {
 			throw new MiraclSystemException(e);
@@ -181,6 +181,7 @@ public class MiraclClient {
 	public URI getAuthorizationRequestUrl(MiraclStatePreserver preserver) {
 		State state = new State();
 		Nonce nonce = new Nonce();
+
 		preserver.put(KEY_STATE, state.getValue());
 		preserver.put(KEY_NONCE, nonce.getValue());
 
@@ -215,7 +216,8 @@ public class MiraclClient {
 	public String validateAuthorization(MiraclStatePreserver preserver, String queryString) {
 		try {
 			final AuthenticationResponse response;
-			response = parseAuthenticationResponse(queryString);
+			URI queryUri = buildAuthenticationUri(queryString);
+			response = parseAuthenticationResponse(queryUri);
 
 			if (response instanceof AuthenticationErrorResponse) {
 				ErrorObject error = ((AuthenticationErrorResponse) response).getErrorObject();
@@ -240,11 +242,13 @@ public class MiraclClient {
 		return null;
 	}
 
-	protected AuthenticationResponse parseAuthenticationResponse(String queryString) {
-		URI uri = URI.create("/?" + queryString);
+	protected URI buildAuthenticationUri(String queryString) {
+		return URI.create("/?" + queryString);
+	}
 
+	protected AuthenticationResponse parseAuthenticationResponse(URI queryUri) {
 		try {
-			return AuthenticationResponseParser.parse(uri);
+			return AuthenticationResponseParser.parse(queryUri);
 		} catch (ParseException e) {
 			throw new MiraclClientException(e);
 		}
@@ -263,7 +267,9 @@ public class MiraclClient {
 		TokenRequest tokenRequest = new TokenRequest(providerMetadata.getTokenEndpointURI(),
 				new ClientSecretBasic(clientId, clientSecret),
 				new AuthorizationCodeGrant(authorizationCode, redirectUrl));
+
 		final TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
+
 		if (tokenResponse instanceof TokenErrorResponse) {
 			ErrorObject error = ((TokenErrorResponse) tokenResponse).getErrorObject();
 			throw new MiraclClientException(error);
@@ -340,9 +346,7 @@ public class MiraclClient {
 	protected UserInfo requestUserInfo(String token) throws IOException, ParseException {
 		final BearerAccessToken accessToken = new BearerAccessToken(token);
 		UserInfoRequest userInfoReq = new UserInfoRequest(providerMetadata.getUserInfoEndpointURI(), accessToken);
-
-		HTTPResponse userInfoHTTPResp = userInfoReq.toHTTPRequest().send();
-		UserInfoResponse userInfoResponse = UserInfoResponse.parse(userInfoHTTPResp);
+		UserInfoResponse userInfoResponse = doUserInfoRequest(userInfoReq);
 
 		if (userInfoResponse instanceof UserInfoErrorResponse) {
 			ErrorObject error = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
@@ -351,6 +355,18 @@ public class MiraclClient {
 
 		UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
 		return successResponse.getUserInfo();
+	}
+	
+	/**
+	 * Perform an HTTP request to retrieve user info.
+	 * @param request Request to send
+	 * @return A user info response
+	 * @throws IOException If an HTTP request could not be made
+	 * @throws ParseException If the response could not be parsed into a UserInfoResponse
+	 */
+	protected UserInfoResponse doUserInfoRequest(UserInfoRequest request) throws IOException, ParseException {
+		HTTPResponse httpResponse = request.toHTTPRequest().send();
+		return UserInfoResponse.parse(httpResponse);
 	}
 
 	/**
@@ -435,10 +451,10 @@ public class MiraclClient {
 		JWKSource<SecurityContext> keySource;
 		JWSKeySelector<SecurityContext> keySelector;
 		URL url;
-		
+
 		try {
 			url = new URL(keySourceUrl);
-		} catch(MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			throw new MiraclClientException(e);
 		}
 
@@ -462,18 +478,17 @@ public class MiraclClient {
 	 * @return The JWT's claims
 	 * @throws MiraclClientException
 	 *             When the remote JWK URL is not valid
-	 * @throws java.text.ParseException
-	 *             When the token cannot be parsed into a JWT
-	 * @throws BadJOSEException
-	 *             If the JWT is rejected
-	 * @throws JOSEException
-	 *             If there was an error processing the JWT
+	 * @throws MiraclSystemException
+	 *             When the token could not be validated
 	 */
-	public JWTClaimsSet extractClaims(String keySourceUrl, JWSAlgorithm algorithm, String token)
-			throws java.text.ParseException, BadJOSEException, JOSEException {
-
+	public JWTClaimsSet extractClaims(String keySourceUrl, JWSAlgorithm algorithm, String token) {
 		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = buildJwtProcessor(algorithm, keySourceUrl);
-		return jwtProcessor.process(token, null);
+
+		try {
+			return jwtProcessor.process(token, null);
+		} catch (java.text.ParseException | BadJOSEException | JOSEException e) {
+			throw new MiraclSystemException(e);
+		}
 	}
 
 	/**
@@ -492,16 +507,13 @@ public class MiraclClient {
 	 *             When the token could not be validated
 	 */
 	public void validateToken(String keySourceUrl, JWSAlgorithm algorithm, String token) {
-		try {
-			extractClaims(keySourceUrl, algorithm, token);
-		} catch (java.text.ParseException | BadJOSEException | JOSEException e) {
-			throw new MiraclSystemException(e);
-		}
+		extractClaims(keySourceUrl, algorithm, token);
 	}
 
 	/**
 	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
-	 * cannot. This method will use the default URL configuration seen in {@link MiraclConfig}.
+	 * cannot. This method will use the default URL configuration seen in
+	 * {@link MiraclConfig}.
 	 * 
 	 * @param algorithm
 	 *            JWS algorithm to use
@@ -516,10 +528,11 @@ public class MiraclClient {
 		String keySourceUrl = MiraclConfig.ISSUER + MiraclConfig.CERTS_API_ENDPOINT;
 		validateToken(keySourceUrl, algorithm, token);
 	}
-	
+
 	/**
 	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
-	 * cannot. This method will use the default URL configuration seen in {@link MiraclConfig}.
+	 * cannot. This method will use the default URL configuration seen in
+	 * {@link MiraclConfig}.
 	 * 
 	 * @param algorithm
 	 *            Name of the JWS algorithm to use
@@ -534,9 +547,10 @@ public class MiraclClient {
 		JWSAlgorithm jwsAlgorithm = getJWSAlgorithm(algorithm);
 		validateToken(jwsAlgorithm, token);
 	}
-	
+
 	/**
 	 * Get a JWSAlgorithm by its name.
+	 * 
 	 * @param name
 	 * @return
 	 */

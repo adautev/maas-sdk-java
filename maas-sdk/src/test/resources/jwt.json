@@ -1,0 +1,8 @@
+{
+  "iss": "mcl",
+  "iat": 1486479807,
+  "exp": 96188828607,
+  "aud": "www.example.com",
+  "sub": "MOCK_USER",
+  "Email": "test2@example.com"
+}
