@@ -6,8 +6,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.id.Subject;
+import com.nimbusds.oauth2.sdk.token.BearerTokenError;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
+import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
+import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
+import com.nimbusds.openid.connect.sdk.UserInfoResponse;
+import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 
 import java.io.InputStream;
@@ -25,6 +32,8 @@ import java.util.Properties;
 import java.util.function.Consumer;
 
 public class MiraclClientTest {
+	
+	private static final String TEST_URL = "http://example.com";
 
 	MiraclClient client;
 	MiraclStatePreserver preserver;
@@ -106,17 +115,36 @@ public class MiraclClientTest {
 	@Test
 	public void testAuthFlow() throws Exception {
 		client.getAuthorizationRequestUrl(preserver);
+
 		final String miracl_state = preserver.get("miracl_state");
 		final String miracl_nonce = preserver.get("miracl_nonce");
 
 		String queryString = "state=" + miracl_state + "&nonce=" + miracl_nonce + "&code=MOCK_CODE";
 		String tokenInput = "MOCK_TOKEN";
-
 		String token = client.validateAuthorization(preserver, queryString);
-		Assert.assertEquals(tokenInput, token);
-		final String id = client.getUserId(preserver);
-		Assert.assertEquals(id, "MOCK_USER");
 
+		Assert.assertEquals(tokenInput, token);
+		Assert.assertEquals(client.getUserId(preserver), "MOCK_USER");
+	}
+
+	@Test
+	public void testVerifyAuthenticationSuccess() throws Exception {
+		AuthenticationResponse success = new AuthenticationSuccessResponse(new URI(TEST_URL), null, null, null, null, null, null);
+		AuthenticationResponse error = new AuthenticationErrorResponse(new URI(TEST_URL), new ErrorObject(""), null, null);
+	
+		try {
+			client.validateNonErrorResponse(success);
+		} catch (MiraclClientException expected) {
+			Assert.fail("AuthenticationSuccessResponses are identified as errors");
+		}
+
+		try {
+			client.validateNonErrorResponse(error);
+		} catch (MiraclClientException expected) {
+			return;
+		}
+		
+		Assert.fail("AuthenticationErrorResponses are not detected as such");
 	}
 
 	@Test
@@ -127,31 +155,6 @@ public class MiraclClientTest {
 		Assert.assertEquals(System.getProperty("https.proxyHost"), "localhost");
 		Assert.assertEquals(System.getProperty("http.proxyPort"), "8888");
 		Assert.assertEquals(System.getProperty("https.proxyPort"), "8888");
-	}
-
-	@Test
-	public void testValidateNonJsonToken() throws Exception {
-		try {
-			client = new MiraclClient("clientId", "clientSecret", "bad URL");
-			client.validateToken("RS256", "");
-		} catch (MiraclSystemException expected) {
-			return;
-		}
-
-		Assert.fail("Token validation did not fail with non-JSON token");
-	}
-
-	@Test
-	public void testBuildJwtProcessorBadUrl() throws Exception {
-		try {
-			client = new MiraclClient("clientId", "clientSecret", "bad URL");
-			client.buildJwtProcessor(JWSAlgorithm.HS256, "bad URL");
-		} catch (MiraclException e) {
-			Assert.assertTrue(e.getMessage().contains("bad URL"));
-			return;
-		}
-
-		Assert.fail("It was possible to build a JWT processor with an invalid URL");
 	}
 
 	@Test
@@ -193,47 +196,51 @@ public class MiraclClientTest {
 	}
 
 	@Test
-	public void testExtractClaims() throws Exception {
-		JWTClaimsSet claims = client.extractClaims("", JWSAlgorithm.HS256, properties.getProperty("jwt.valid"));
-		Assert.assertEquals(claims.getSubject(), "test@miracl.com");
-	}
-
-	@Test
-	public void testValidateToken() throws Exception {
-		// Validation should pass for this one
-		try {
-			client.validateToken(JWSAlgorithm.HS256, properties.getProperty("jwt.valid"));
-		} catch (MiraclSystemException e) {
-			Assert.fail("JWT signature validation failed for a valid signature");
-		}
-
-		// Validation should pass for this one
-		try {
-			client.validateToken("HS256", properties.getProperty("jwt.valid"));
-		} catch (MiraclSystemException e) {
-			Assert.fail("JWT signature validation failed for a valid signature");
-		}
-
-		// Validation should fail for this one
-		try {
-			client.validateToken(JWSAlgorithm.HS256, properties.getProperty("jwt.invalidSignature"));
-		} catch (MiraclSystemException e) {
-			Assert.assertTrue(e.getMessage().contains("Invalid signature"));
-			return;
-		}
-		
-		Assert.fail("JWT signature validation succeeded for an invalid signature");
-	}
-	
-	@Test
-	public void testGetJWSAlgorithm() throws Exception {
-		Assert.assertEquals(client.getJWSAlgorithm("HS256"), JWSAlgorithm.HS256);
-	}
-	
-	@Test
 	public void testRequestUserInfo() throws Exception {
 		UserInfo info = client.requestUserInfo("token");
 		Assert.assertEquals(info.getClaim("Email"), "test2@example.com");
+	}
+	
+	@Test
+	public void testVerifyUserInfoRequestSuccess() throws Exception {
+		UserInfoResponse success = new UserInfoSuccessResponse(new UserInfo(new Subject()));
+		UserInfoResponse error = new UserInfoErrorResponse(new BearerTokenError("", ""));
+		
+		try {
+			client.verifyUserInfoRequestSuccess(success);
+		} catch (MiraclClientException e) {
+			Assert.fail("A UserInfoSuccessResponse was erroneously identified as an error");
+		}
+		
+		try {
+			client.verifyUserInfoRequestSuccess(error);
+		} catch (MiraclClientException e) {
+			// An exception is expected because error is a UserInfoErrorResponse
+			return;
+		}
+		
+		Assert.fail("A UserInfoErrorResponse was erroneously identified as a success");
+	}
+
+	@Test
+	public void testVerifyTokenResponseSuccess() throws Exception {
+		//TokenResponse success = new OIDCTokenResponse(new OIDCTokens(new JWT(), new AccessToke));
+//		TokenResponse error = new TokenErrorResponse(new ErrorObject(""));
+		
+//		try {
+//			client.verifyTokenResponseSuccess(success);
+//		} catch (MiraclClientException e) {
+//			Assert.fail("A TokenSuccessResponse was erroneously identified as an error");
+//		}
+//		
+//		try {
+//			client.verifyTokenResponseSuccess(error);
+//		} catch (MiraclClientException e) {
+//			// An exception is expected because error is a TokenErrorResponse
+//			return;
+//		}
+		
+//		Assert.fail("A TokenErrorResponse was erroneously identified as a success");
 	}
 	
 	@Test
@@ -249,7 +256,7 @@ public class MiraclClientTest {
 				Assert.assertTrue(me.getMessage().contains("Missing authorization response parameters"));
 				return;
 			}
-			
+
 			Assert.fail("It was possible to parse an invalid authentication response");
 		});
 	}

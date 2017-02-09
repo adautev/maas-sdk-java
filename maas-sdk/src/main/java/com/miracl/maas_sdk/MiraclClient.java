@@ -1,20 +1,11 @@
 package com.miracl.maas_sdk;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.jwk.source.RemoteJWKSet;
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jose.proc.JWSKeySelector;
-import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.proc.SecurityContext;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.ErrorResponse;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.Response;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.SerializeException;
@@ -28,7 +19,6 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
@@ -45,7 +35,6 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -123,7 +112,7 @@ public class MiraclClient {
 	private OIDCProviderMetadata getProviderMetadata(String issuer)
 			throws URISyntaxException, IOException, ParseException {
 		URI issuerURI = new URI(issuer);
-		URL providerConfigurationURL = issuerURI.resolve("/.well-known/openid-configuration").toURL();
+		URL providerConfigurationURL = issuerURI.resolve(MiraclConfig.OPENID_CONFIG_ENDPOINT).toURL();
 		String providerInfo = requestProviderInfo(providerConfigurationURL);
 
 		return OIDCProviderMetadata.parse(providerInfo);
@@ -214,38 +203,41 @@ public class MiraclClient {
 	 *             if failure occurred while communicating with server
 	 */
 	public String validateAuthorization(MiraclStatePreserver preserver, String queryString) {
+		URI queryUri = buildAuthenticationUri(queryString);
+		AuthenticationResponse response = parseAuthenticationResponse(queryUri);
+		boolean isStateOk;
+		String accessToken;
+
+		validateNonErrorResponse(response);
+		isStateOk = response.getState().toString().equals(preserver.get(KEY_STATE));
+
+		if (!isStateOk) {
+			return null;
+		}
+
 		try {
-			final AuthenticationResponse response;
-			URI queryUri = buildAuthenticationUri(queryString);
-			response = parseAuthenticationResponse(queryUri);
-
-			if (response instanceof AuthenticationErrorResponse) {
-				ErrorObject error = ((AuthenticationErrorResponse) response).getErrorObject();
-				throw new MiraclClientException(error.getDescription());
-			}
-
-			AuthenticationSuccessResponse successResponse = (AuthenticationSuccessResponse) response;
-
-			final boolean stateOk = successResponse.getState().toString().equals(preserver.get(KEY_STATE));
-
-			if (stateOk) {
-				final String accessToken = requestAccessToken(
-						((AuthenticationSuccessResponse) response).getAuthorizationCode());
-				preserver.put(KEY_TOKEN, accessToken);
-				return accessToken;
-			}
-		} catch (Exception e) {
+			accessToken = requestAccessToken(((AuthenticationSuccessResponse) response).getAuthorizationCode());
+			preserver.put(KEY_TOKEN, accessToken);
+			return accessToken;
+		} catch (ParseException | IOException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			throw new MiraclSystemException(e);
 		}
-
-		return null;
 	}
 
 	protected URI buildAuthenticationUri(String queryString) {
 		return URI.create("/?" + queryString);
 	}
 
+	/**
+	 * Attempt to parse an AuthenticationResponse
+	 * 
+	 * @param queryUri
+	 * @throws MiraclClientException
+	 *             If the response could not be parsed into an
+	 *             AuthenticationResponse
+	 * @return
+	 */
 	protected AuthenticationResponse parseAuthenticationResponse(URI queryUri) {
 		try {
 			return AuthenticationResponseParser.parse(queryUri);
@@ -264,20 +256,52 @@ public class MiraclClient {
 	 *             In case of incorrect answer from backend
 	 */
 	protected String requestAccessToken(AuthorizationCode authorizationCode) throws IOException, ParseException {
-		TokenRequest tokenRequest = new TokenRequest(providerMetadata.getTokenEndpointURI(),
-				new ClientSecretBasic(clientId, clientSecret),
-				new AuthorizationCodeGrant(authorizationCode, redirectUrl));
-
-		final TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
-
-		if (tokenResponse instanceof TokenErrorResponse) {
-			ErrorObject error = ((TokenErrorResponse) tokenResponse).getErrorObject();
-			throw new MiraclClientException(error);
-		}
+		TokenRequest tokenRequest = buildTokenRequest(authorizationCode);
+		TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
+		verifyTokenResponseSuccess(tokenResponse);
 
 		OIDCTokenResponse accessTokenResponse = (OIDCTokenResponse) tokenResponse;
 		final AccessToken accessToken = accessTokenResponse.getOIDCTokens().getAccessToken();
 		return accessToken.getValue();
+	}
+
+	/**
+	 * Build a token request based on an authorization code
+	 * 
+	 * @param authorizationCode
+	 * @return
+	 */
+	protected TokenRequest buildTokenRequest(AuthorizationCode authorizationCode) {
+		return new TokenRequest(providerMetadata.getTokenEndpointURI(), new ClientSecretBasic(clientId, clientSecret),
+				new AuthorizationCodeGrant(authorizationCode, redirectUrl));
+	}
+	
+	/**
+	 * Verify a TokenResponse is not a TokenErrorResponse and throw a
+	 * {@link MiraclClientException} if it is
+	 * 
+	 * @param response
+	 * @throws MiraclClientException
+	 *             If response is an instance of TokenErrorResponse
+	 */
+	protected void verifyTokenResponseSuccess(TokenResponse response) {
+		if (response instanceof TokenErrorResponse) {
+			ErrorObject error = ((TokenErrorResponse) response).getErrorObject();
+			throw new MiraclClientException(error);
+		}		
+	}
+	
+	/**
+	 * Check that a {@link Response} is not an {@link ErrorResponse},
+	 * throw a {@link MiraclClientException} if it is.
+	 * @param response The Response to validate
+	 * @throws MiraclClientException If the Response is an instance of ErrorResponse
+	 */
+	protected void validateNonErrorResponse(Response response) {
+		if (response instanceof ErrorResponse) {
+			ErrorObject error = ((ErrorResponse) response).getErrorObject();
+			throw new MiraclClientException(error);
+		}
 	}
 
 	/**
@@ -328,7 +352,6 @@ public class MiraclClient {
 			UserInfo userInfo = requestUserInfo(preserver.get(KEY_TOKEN));
 			preserver.put(KEY_USERINFO, userInfo.toJSONObject().toJSONString());
 			return userInfo;
-
 		} catch (SerializeException | IOException | ParseException e) {
 			throw new MiraclSystemException(e);
 		}
@@ -347,22 +370,37 @@ public class MiraclClient {
 		final BearerAccessToken accessToken = new BearerAccessToken(token);
 		UserInfoRequest userInfoReq = new UserInfoRequest(providerMetadata.getUserInfoEndpointURI(), accessToken);
 		UserInfoResponse userInfoResponse = doUserInfoRequest(userInfoReq);
-
-		if (userInfoResponse instanceof UserInfoErrorResponse) {
-			ErrorObject error = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
-			throw new MiraclClientException(error);
-		}
+		verifyUserInfoRequestSuccess(userInfoResponse);
 
 		UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
 		return successResponse.getUserInfo();
 	}
-	
+
+	/**
+	 * Verify a UserInfoResponse is not a UserInfoErrorResponse and throw a
+	 * {@link MiraclClientException} if it is
+	 * 
+	 * @param response
+	 * @throws MiraclClientException
+	 *             If response is an instance of UserInfoErrorResponse
+	 */
+	protected void verifyUserInfoRequestSuccess(UserInfoResponse response) {
+		if (response instanceof UserInfoErrorResponse) {
+			ErrorObject error = ((UserInfoErrorResponse) response).getErrorObject();
+			throw new MiraclClientException(error);
+		}
+	}
+
 	/**
 	 * Perform an HTTP request to retrieve user info.
-	 * @param request Request to send
+	 * 
+	 * @param request
+	 *            Request to send
 	 * @return A user info response
-	 * @throws IOException If an HTTP request could not be made
-	 * @throws ParseException If the response could not be parsed into a UserInfoResponse
+	 * @throws IOException
+	 *             If an HTTP request could not be made
+	 * @throws ParseException
+	 *             If the response could not be parsed into a UserInfoResponse
 	 */
 	protected UserInfoResponse doUserInfoRequest(UserInfoRequest request) throws IOException, ParseException {
 		HTTPResponse httpResponse = request.toHTTPRequest().send();
@@ -432,129 +470,5 @@ public class MiraclClient {
 
 		final String sub = userInfo.getStringClaim("sub");
 		return sub == null ? "" : sub;
-	}
-
-	/**
-	 * Create a JWT processor that can be used to verify tokens and extract
-	 * claims.
-	 * 
-	 * @param algorithm
-	 *            JWS algorithm to use
-	 * @param keySourceUrl
-	 *            URL to retrieve a remote JWK set from
-	 * @return A DefaultJWTProcessor
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 */
-	public ConfigurableJWTProcessor<SecurityContext> buildJwtProcessor(JWSAlgorithm algorithm, String keySourceUrl) {
-		ConfigurableJWTProcessor<SecurityContext> processor;
-		JWKSource<SecurityContext> keySource;
-		JWSKeySelector<SecurityContext> keySelector;
-		URL url;
-
-		try {
-			url = new URL(keySourceUrl);
-		} catch (MalformedURLException e) {
-			throw new MiraclClientException(e);
-		}
-
-		processor = new DefaultJWTProcessor<>();
-		keySource = new RemoteJWKSet<>(url);
-		keySelector = new JWSVerificationKeySelector<>(algorithm, keySource);
-		processor.setJWSKeySelector(keySelector);
-
-		return processor;
-	}
-
-	/**
-	 * Extracts and returns a JWT's claims.
-	 * 
-	 * @param keySourceUrl
-	 *            URL to retrieve a remote JWK set from
-	 * @param algorithm
-	 *            JWS algorithm to use
-	 * @param token
-	 *            JSON Web Token to validate
-	 * @return The JWT's claims
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 * @throws MiraclSystemException
-	 *             When the token could not be validated
-	 */
-	public JWTClaimsSet extractClaims(String keySourceUrl, JWSAlgorithm algorithm, String token) {
-		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = buildJwtProcessor(algorithm, keySourceUrl);
-
-		try {
-			return jwtProcessor.process(token, null);
-		} catch (java.text.ParseException | BadJOSEException | JOSEException e) {
-			throw new MiraclSystemException(e);
-		}
-	}
-
-	/**
-	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
-	 * cannot.
-	 * 
-	 * @param keySourceUrl
-	 *            URL to retrieve a remote JWK set from
-	 * @param algorithm
-	 *            JWS algorithm to use
-	 * @param token
-	 *            JSON Web Token to validate
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 * @throws MiraclSystemException
-	 *             When the token could not be validated
-	 */
-	public void validateToken(String keySourceUrl, JWSAlgorithm algorithm, String token) {
-		extractClaims(keySourceUrl, algorithm, token);
-	}
-
-	/**
-	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
-	 * cannot. This method will use the default URL configuration seen in
-	 * {@link MiraclConfig}.
-	 * 
-	 * @param algorithm
-	 *            JWS algorithm to use
-	 * @param token
-	 *            JSON Web Token to validate
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 * @throws MiraclSystemException
-	 *             When the token could not be validated
-	 */
-	public void validateToken(JWSAlgorithm algorithm, String token) {
-		String keySourceUrl = MiraclConfig.ISSUER + MiraclConfig.CERTS_API_ENDPOINT;
-		validateToken(keySourceUrl, algorithm, token);
-	}
-
-	/**
-	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
-	 * cannot. This method will use the default URL configuration seen in
-	 * {@link MiraclConfig}.
-	 * 
-	 * @param algorithm
-	 *            Name of the JWS algorithm to use
-	 * @param token
-	 *            JSON Web Token to validate
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 * @throws MiraclSystemException
-	 *             When the token could not be validated
-	 */
-	public void validateToken(String algorithm, String token) {
-		JWSAlgorithm jwsAlgorithm = getJWSAlgorithm(algorithm);
-		validateToken(jwsAlgorithm, token);
-	}
-
-	/**
-	 * Get a JWSAlgorithm by its name.
-	 * 
-	 * @param name
-	 * @return
-	 */
-	public JWSAlgorithm getJWSAlgorithm(String name) {
-		return new JWSAlgorithm(name);
 	}
 }

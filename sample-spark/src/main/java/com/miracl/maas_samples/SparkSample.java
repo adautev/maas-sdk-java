@@ -2,6 +2,7 @@ package com.miracl.maas_samples;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.miracl.maas_sdk.JwtValidator;
 import com.miracl.maas_sdk.MiraclClient;
 import com.miracl.maas_sdk.MiraclException;
 import com.mitchellbosecke.pebble.PebbleEngine;
@@ -147,7 +148,8 @@ public class SparkSample {
 
 		// Validate the JWT you received
 		try {
-			client.validateToken("RS256", token);
+			JwtValidator validator = new JwtValidator("RS256");
+			validator.validateToken(token);
 		} catch (MiraclException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			return failLogin(client, preserver, req, resp);
