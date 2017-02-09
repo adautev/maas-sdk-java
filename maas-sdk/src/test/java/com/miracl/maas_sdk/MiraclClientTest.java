@@ -202,45 +202,24 @@ public class MiraclClientTest {
 	}
 	
 	@Test
-	public void testVerifyUserInfoRequestSuccess() throws Exception {
+	public void testValidateNonErrorResponse() throws Exception {
 		UserInfoResponse success = new UserInfoSuccessResponse(new UserInfo(new Subject()));
 		UserInfoResponse error = new UserInfoErrorResponse(new BearerTokenError("", ""));
 		
 		try {
-			client.verifyUserInfoRequestSuccess(success);
+			client.validateNonErrorResponse(success);
 		} catch (MiraclClientException e) {
 			Assert.fail("A UserInfoSuccessResponse was erroneously identified as an error");
 		}
 		
 		try {
-			client.verifyUserInfoRequestSuccess(error);
+			client.validateNonErrorResponse(error);
 		} catch (MiraclClientException e) {
 			// An exception is expected because error is a UserInfoErrorResponse
 			return;
 		}
 		
 		Assert.fail("A UserInfoErrorResponse was erroneously identified as a success");
-	}
-
-	@Test
-	public void testVerifyTokenResponseSuccess() throws Exception {
-		//TokenResponse success = new OIDCTokenResponse(new OIDCTokens(new JWT(), new AccessToke));
-//		TokenResponse error = new TokenErrorResponse(new ErrorObject(""));
-		
-//		try {
-//			client.verifyTokenResponseSuccess(success);
-//		} catch (MiraclClientException e) {
-//			Assert.fail("A TokenSuccessResponse was erroneously identified as an error");
-//		}
-//		
-//		try {
-//			client.verifyTokenResponseSuccess(error);
-//		} catch (MiraclClientException e) {
-//			// An exception is expected because error is a TokenErrorResponse
-//			return;
-//		}
-		
-//		Assert.fail("A TokenErrorResponse was erroneously identified as a success");
 	}
 	
 	@Test

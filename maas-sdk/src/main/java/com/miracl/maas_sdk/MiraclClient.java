@@ -9,7 +9,6 @@ import com.nimbusds.oauth2.sdk.Response;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.SerializeException;
-import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
@@ -26,7 +25,6 @@ import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
-import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
@@ -258,7 +256,7 @@ public class MiraclClient {
 	protected String requestAccessToken(AuthorizationCode authorizationCode) throws IOException, ParseException {
 		TokenRequest tokenRequest = buildTokenRequest(authorizationCode);
 		TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
-		verifyTokenResponseSuccess(tokenResponse);
+		validateNonErrorResponse(tokenResponse);
 
 		OIDCTokenResponse accessTokenResponse = (OIDCTokenResponse) tokenResponse;
 		final AccessToken accessToken = accessTokenResponse.getOIDCTokens().getAccessToken();
@@ -274,21 +272,6 @@ public class MiraclClient {
 	protected TokenRequest buildTokenRequest(AuthorizationCode authorizationCode) {
 		return new TokenRequest(providerMetadata.getTokenEndpointURI(), new ClientSecretBasic(clientId, clientSecret),
 				new AuthorizationCodeGrant(authorizationCode, redirectUrl));
-	}
-	
-	/**
-	 * Verify a TokenResponse is not a TokenErrorResponse and throw a
-	 * {@link MiraclClientException} if it is
-	 * 
-	 * @param response
-	 * @throws MiraclClientException
-	 *             If response is an instance of TokenErrorResponse
-	 */
-	protected void verifyTokenResponseSuccess(TokenResponse response) {
-		if (response instanceof TokenErrorResponse) {
-			ErrorObject error = ((TokenErrorResponse) response).getErrorObject();
-			throw new MiraclClientException(error);
-		}		
 	}
 	
 	/**
@@ -370,25 +353,10 @@ public class MiraclClient {
 		final BearerAccessToken accessToken = new BearerAccessToken(token);
 		UserInfoRequest userInfoReq = new UserInfoRequest(providerMetadata.getUserInfoEndpointURI(), accessToken);
 		UserInfoResponse userInfoResponse = doUserInfoRequest(userInfoReq);
-		verifyUserInfoRequestSuccess(userInfoResponse);
+		validateNonErrorResponse(userInfoResponse);
 
 		UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
 		return successResponse.getUserInfo();
-	}
-
-	/**
-	 * Verify a UserInfoResponse is not a UserInfoErrorResponse and throw a
-	 * {@link MiraclClientException} if it is
-	 * 
-	 * @param response
-	 * @throws MiraclClientException
-	 *             If response is an instance of UserInfoErrorResponse
-	 */
-	protected void verifyUserInfoRequestSuccess(UserInfoResponse response) {
-		if (response instanceof UserInfoErrorResponse) {
-			ErrorObject error = ((UserInfoErrorResponse) response).getErrorObject();
-			throw new MiraclClientException(error);
-		}
 	}
 
 	/**
