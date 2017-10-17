@@ -4,7 +4,7 @@
 [![Master Coverage Status](https://coveralls.io/repos/github/miracl/maas-sdk-java/badge.svg?branch=master)](https://coveralls.io/github/miracl/maas-sdk-java?branch=master)
 
 * **category**:    SDK
-* **copyright**:   2016 MIRACL UK LTD
+* **copyright**:   2017 MIRACL UK LTD
 * **license**:     ASL 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 * **link**:        https://github.com/miracl/maas-sdk-java
 
@@ -118,3 +118,13 @@ Miracl. Samples can be run after setup step is done.
 Redirect URI for this sample is `http://127.0.0.1:5000/login` if run locally.
 
 To run Spark sample, use `./gradlew sample-spark:run`
+
+## Docker
+
+Configure the sample app (see above) then run docker
+
+`docker build --tag=miracl/javasdk:latest .`
+
+`docker run -it -p 5000:5000 miracl/javasdk`
+
+Open the app at url `http://127.0.0.1:5000/` 
