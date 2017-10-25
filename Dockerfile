@@ -42,7 +42,7 @@ RUN apt-get update -y && apt-get -y dist-upgrade && \
     apt-get update
 
 # install packages
-RUN apt-get install -y  git build-essentiallibssl-dev default-jdk
+RUN apt-get install -y  git build-essential libssl-dev default-jdk
 
 # Install SDK
 COPY . /app
