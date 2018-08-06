@@ -33,7 +33,7 @@ public class JwtValidatorNoNetworkMock extends JwtValidator {
 	}
 
 	@Override
-	public ConfigurableJWTProcessor<SecurityContext> buildJwtProcessor() {
+	public ConfigurableJWTProcessor<SecurityContext> buildJwtProcessor(JWSAlgorithm algorithm) {
 		ConfigurableJWTProcessor<SecurityContext> processor;
 		JWKSource<SecurityContext> keySource;
 		JWKSet keySet;

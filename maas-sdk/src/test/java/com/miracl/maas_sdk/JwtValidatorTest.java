@@ -33,22 +33,16 @@ public class JwtValidatorTest {
 	}
 
 	@Test
-	public void testValidateNonJsonToken() throws Exception {
-		try {
-			validator = new JwtValidator("RS256");
-			validator.validateToken("");
-		} catch (MiraclSystemException expected) {
-			return;
-		}
-
-		Assert.fail("Token validation did not fail with non-JSON token");
+	public void testValidateNonJsonToken() {
+		validator = new JwtValidator("RS256");
+		Assert.assertFalse(validator.validateToken(""));
 	}
 
 	@Test
-	public void testBuildJwtProcessorBadUrl() throws Exception {
+	public void testBuildJwtProcessorBadUrl() {
 		try {
 			validator = new JwtValidator(JWSAlgorithm.HS256, "bad URL");
-			validator.buildJwtProcessor();
+			validator.buildJwtProcessor(JWSAlgorithm.RS256);
 		} catch (MiraclClientException e) {
 			Assert.assertTrue(e.getMessage().contains("bad URL"));
 			return;
@@ -63,11 +57,10 @@ public class JwtValidatorTest {
 
 		ConfigurableJWTProcessor<SecurityContext> processor;
 		validator = new JwtValidatorNoNetworkMock(JWSAlgorithm.HS256, url);
-		processor = validator.buildJwtProcessor();
+		processor = validator.buildJwtProcessor(JWSAlgorithm.HS256);
 
 		try {
 			JWTClaimsSet claims = processor.process(properties.getProperty("jwt.valid"), null);
-
 			Assert.assertEquals(claims.getClaim("Email"), "test2@miracl.com");
 		} catch (ParseException | BadJOSEException | JOSEException e) {
 			e.printStackTrace();
@@ -82,7 +75,7 @@ public class JwtValidatorTest {
 	}
 
 	@Test
-	public void testValidateToken() throws Exception {
+	public void testValidateToken() {
 		// Validation should pass for this one
 		try {
 			validator = new JwtValidatorNoNetworkMock(JWSAlgorithm.HS256);
@@ -102,13 +95,12 @@ public class JwtValidatorTest {
 		// Validation should fail for this one
 		try {
 			validator = new JwtValidatorNoNetworkMock(JWSAlgorithm.HS256);
-			validator.validateToken(properties.getProperty("jwt.invalidSignature"));
+			Assert.assertFalse(validator.validateToken(properties.getProperty("jwt.invalidSignature")));
 		} catch (MiraclSystemException e) {
 			Assert.assertTrue(e.getMessage().contains("Invalid signature"));
 			return;
 		}
 
-		Assert.fail("JWT signature validation succeeded for an invalid signature");
 	}
 
 	@Test

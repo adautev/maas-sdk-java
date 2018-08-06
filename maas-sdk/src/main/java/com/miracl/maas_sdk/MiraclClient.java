@@ -1,41 +1,30 @@
 package com.miracl.maas_sdk;
 
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.ErrorObject;
-import com.nimbusds.oauth2.sdk.ErrorResponse;
-import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.Response;
-import com.nimbusds.oauth2.sdk.ResponseType;
-import com.nimbusds.oauth2.sdk.Scope;
-import com.nimbusds.oauth2.sdk.SerializeException;
-import com.nimbusds.oauth2.sdk.TokenRequest;
-import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
-import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
-import com.nimbusds.openid.connect.sdk.Nonce;
-import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
-import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
-import com.nimbusds.openid.connect.sdk.UserInfoRequest;
-import com.nimbusds.openid.connect.sdk.UserInfoResponse;
-import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
+import com.nimbusds.openid.connect.sdk.*;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONValue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Base64;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,19 +32,27 @@ import java.util.logging.Logger;
  * Main class for interfacing with Miracl service.
  */
 public class MiraclClient {
-	private static final String KEY_STATE = "miracl_state";
+    private static final String KEY_STATE = "miracl_state";
 	private static final String KEY_NONCE = "miracl_nonce";
 	private static final String KEY_TOKEN = "miracl_token";
 	private static final String KEY_USERINFO = "miracl_userinfo";
 
 	private static final Logger LOGGER = Logger.getLogger(MiraclClient.class.getName());
+    private static final int PLUGGABLE_VERIFICATION_ACTIVATION_ERROR_STATUS_CODE = 404;
+    private static final int PLUGGABLE_VERIFICATION_PULL_ERROR_STATUS_CODE = 404;
+    private static final int PLUGGABLE_VERIFICATION_PULL_UNAUTHORIZED_STATUS_CODE = 400;
+    private static final String PLUGGABLE_VERIFICATION_ACTIVATION_REQUEST_HTTP_CONTENT_TYPE = "application/json";
+    private static final String PLUGGABLE_VERIFICATION_PULL_REQUEST_HTTP_CONTENT_TYPE = "application/json";
+    private static final String PLUGGABLE_VERIFICATION_PULL_USER_ID_FIELD_KEY = "userId";
+    private static final String ALG_HEADER_KEY = "alg";
 
-	private final ClientID clientId;
+    private final ClientID clientId;
 	private final Secret clientSecret;
 	private final URI redirectUrl;
 	private final OIDCProviderMetadata providerMetadata;
+    private String providerInfo;
 
-	/**
+    /**
 	 * @param clientId
 	 *            Client ID
 	 * @param clientSecret
@@ -82,18 +79,26 @@ public class MiraclClient {
 	 *             if parameters can't be parsed
 	 */
 	public MiraclClient(String clientId, String clientSecret, String redirectUrl, String issuer) {
-		this.clientId = new ClientID(clientId);
-		this.clientSecret = new Secret(clientSecret);
-
 		try {
+			this.clientId = new ClientID(clientId);
+			this.clientSecret = new Secret(clientSecret);
 			this.redirectUrl = new URI(redirectUrl);
 			providerMetadata = getProviderMetadata(issuer);
+
 		} catch (URISyntaxException | ParseException | IOException e) {
 			throw new MiraclSystemException(e);
 		}
 	}
 
-	/**
+    /**
+     * Forms a pluggable verification pull endpoint URL, according to the current MiraclConfig values.
+     * @return A pluggable verification pull endpoint fully qualified URL
+     */
+    public static String getPluggableVerificationPullEndpointURL() {
+	    return String.format("%s%s", MiraclConfig.ISSUER, MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
+    }
+
+    /**
 	 * Perform a Provider Configuration Request to the issuer, returning its
 	 * metadata.
 	 * 
@@ -107,15 +112,18 @@ public class MiraclClient {
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	private OIDCProviderMetadata getProviderMetadata(String issuer)
+	public OIDCProviderMetadata getProviderMetadata(String issuer)
 			throws URISyntaxException, IOException, ParseException {
-		URI issuerURI = new URI(issuer);
-		URL providerConfigurationURL = issuerURI.resolve(MiraclConfig.OPENID_CONFIG_ENDPOINT).toURL();
-		String providerInfo = requestProviderInfo(providerConfigurationURL);
+            URI issuerURI = new URI(issuer);
+            URL providerConfigurationURL = issuerURI.resolve(MiraclConfig.OPENID_CONFIG_ENDPOINT).toURL();
+            providerInfo = requestProviderInfo(providerConfigurationURL);
 
-		return OIDCProviderMetadata.parse(providerInfo);
+            return OIDCProviderMetadata.parse(providerInfo);
 	}
 
+    public OIDCProviderMetadata getProviderMetadata() {
+	    return providerMetadata;
+    }
 	/**
 	 * Use a proxy for all out-going requests performed by the library.
 	 * 
@@ -267,7 +275,7 @@ public class MiraclClient {
 	 * Build a token request based on an authorization code
 	 * 
 	 * @param authorizationCode
-	 * @return
+	     * @return
 	 */
 	protected TokenRequest buildTokenRequest(AuthorizationCode authorizationCode) {
 		return new TokenRequest(providerMetadata.getTokenEndpointURI(), new ClientSecretBasic(clientId, clientSecret),
@@ -439,4 +447,193 @@ public class MiraclClient {
 		final String sub = userInfo.getStringClaim("sub");
 		return sub == null ? "" : sub;
 	}
+
+    /**
+     * Extracts the required data for an identity activation on MIRACL trust, based on the data in the JWT supplied during push pluggable verification.
+     * @param token A valid JWT.
+     * @return
+     */
+	public IdentityActivationModel getIdentityActivationModel(String token, String signingAlgorithm) {
+        JWTClaimsSet tokenSet = extractClaims(token, signingAlgorithm);
+		JSONObject eventsClaim = (JSONObject) tokenSet.getClaim("events");
+		if(eventsClaim == null) {
+			throw new MiraclClientException("\"events\" key not found in activation JWT");
+		}
+		Object newUser = eventsClaim.get("newUser");
+		if(newUser == null) {
+			throw new MiraclClientException("\"newUser\" key not found in activation JWT");
+		}
+		String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY);
+		String activationKey = ((JSONObject) newUser).getAsString(IdentityActivationModel.ACTIVATION_KEY);
+		String subject = ((JSONObject) newUser).getAsString(IdentityActivationModel.USER_ID_KEY);
+		return new IdentityActivationModel(mpinIdHash, activationKey, subject);
+	}
+
+    /**
+     * Validates a JWT used for pluggable validation
+     * @param jwt A calid JSON Web Token.
+     * @param algorithm The expected signing algorithm.
+     * @return
+     */
+    public boolean validatePushToken(String jwt, String algorithm) {
+        JwtValidator validator = new JwtValidator(algorithm);
+        validator.validatePushToken(jwt);
+        return true;
+    }
+
+    /**
+     *
+     * @param jwt A valid JSON Web Token.
+     *          @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
+     * @param algorithm The expected signing algorithm
+     * @return {@link JWTClaimsSet} A set of claims contained in the JSON Web Token
+     */
+    private JWTClaimsSet extractClaims(String jwt, String algorithm) {
+        return extractClaims(jwt, JWSAlgorithm.parse(algorithm));
+    }
+
+    /**
+     *
+     * @param jwt A valid JSON Web Token.
+     *          @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
+     * @param algorithm The expected signing algorithm
+     * @return {@link JWTClaimsSet} A set of claims contained in the JSON Web Token
+     */
+    private JWTClaimsSet extractClaims(String jwt, JWSAlgorithm algorithm) {
+
+        try {
+            JwtValidator validator = new JwtValidator(algorithm);
+            return validator.extractClaims(jwt);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unable to extract claims from JWT.", e);
+            throw new MiraclClientException("Unable to extract claims from JWT.");
+        }
+    }
+
+    /**
+     * Extracts signing algorithm from signed JWT header.
+     * @param jwt The full JWT
+     * @return {@link JWSAlgorithm}
+     * @throws MiraclClientException
+     */
+    public String getJWTSigningAlgorithm(String jwt) throws MiraclClientException {
+        String[] parts = jwt.split("\\.");
+        if(parts.length != 3) {
+            throw new MiraclClientException("Invalid JWT");
+        }
+        JSONObject headerJSON = (JSONObject) JSONValue.parse(Base64.getDecoder().decode(parts[0]));
+        if(headerJSON == null) {
+            throw new MiraclClientException("Unable to parse JWT header");
+        }
+        if(!headerJSON.containsKey("alg")) {
+            throw new MiraclClientException("Signing algorithm not specified in JWT header");
+        }
+        return JWSAlgorithm.parse(headerJSON.getAsString(ALG_HEADER_KEY)).getName();
+    }
+
+    /**
+     * Activates an identity that is a subject to pluggable verification
+     * @param identityActivationModel A {@link IdentityActivationModel} instance with valid client activation parameters.
+     * @param activationUrl The URL of the MIRACL Trust platform activation endpoint
+     */
+    public void activateIdentity(IdentityActivationModel identityActivationModel, String activationUrl) {
+
+
+        try {
+            HTTPRequest activationRequest = new HTTPRequest(HTTPRequest.Method.POST,
+                    new URL(activationUrl)
+            );
+            activationRequest.setAuthorization(getClientCredentials());
+            activationRequest.setContentType(PLUGGABLE_VERIFICATION_ACTIVATION_REQUEST_HTTP_CONTENT_TYPE);
+            JSONObject activationRequestBody = new JSONObject();
+            activationRequestBody.appendField(IdentityActivationModel.MPIN_ID_HASH_KEY, identityActivationModel.getМPinIdHash());
+            activationRequestBody.appendField(IdentityActivationModel.ACTIVATION_KEY, identityActivationModel.getActivationKey());
+            activationRequest.setQuery(activationRequestBody.toJSONString());
+            HTTPResponse response = activationRequest.send();
+            if (response.getStatusCode() == PLUGGABLE_VERIFICATION_ACTIVATION_ERROR_STATUS_CODE) {
+                throw new MiraclClientException("An error occured while activating user.");
+            }
+        } catch (ParseException e) {
+            LOGGER.log(Level.SEVERE, "Unable to set pluggable verification content type.", e);
+            throw new MiraclClientException("An error occured while activating user.");
+        } catch (MalformedURLException e) {
+            LOGGER.log(Level.SEVERE, "Unable to create a pluggable verification activation POST request.", e);
+            throw new MiraclClientException("An error occured while activating user.");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Unable to execute a pluggable verification activation POST request.", e);
+            throw new MiraclClientException("An error occured while activating user.");
+        }
+
+    }
+
+    /**
+     * Activates an identity that is a subject to pluggable verification
+     * @param subject A unique identity identifier
+     * @param pullUrl The URL of the MIRACL Trust pluggable verification pull endpoint
+     */
+    public IdentityActivationModel pullVerification(String subject, String pullUrl) {
+
+        try {
+            HTTPRequest pullRequest = new HTTPRequest(HTTPRequest.Method.POST,
+                    new URL(pullUrl)
+            );
+            pullRequest.setAuthorization(getClientCredentials());
+            pullRequest.setContentType(PLUGGABLE_VERIFICATION_PULL_REQUEST_HTTP_CONTENT_TYPE);
+            JSONObject pullRequestBody = new JSONObject();
+            pullRequestBody.appendField(PLUGGABLE_VERIFICATION_PULL_USER_ID_FIELD_KEY, subject);
+            pullRequest.setQuery(pullRequestBody.toJSONString());
+            HTTPResponse response = pullRequest.send();
+
+            if (response.getStatusCode() == PLUGGABLE_VERIFICATION_PULL_ERROR_STATUS_CODE) {
+                throw new MiraclClientException("An error occured while executing a pluggable verification pull request.");
+            }
+            if (response.getStatusCode() == PLUGGABLE_VERIFICATION_PULL_UNAUTHORIZED_STATUS_CODE) {
+                throw new MiraclClientException("Unable to authenticate towards the pluggable verification pull endpoint.");
+            }
+
+            JSONObject responseBody = response.getContentAsJSONObject();
+            String mpinIdHash = responseBody.getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY);
+            String activationKey = responseBody.getAsString(IdentityActivationModel.ACTIVATION_KEY);
+            //convert second based epoch value to milliseconds
+            Date expirationTime = new Date(responseBody.getAsNumber(IdentityActivationModel.EXPIRATION_TIME).longValue() * 1000);
+
+            if(mpinIdHash==null || mpinIdHash.equals("")) {
+                throw new MiraclClientException("MPin ID hash not been found in the pull verification request.");
+            }
+
+            if(activationKey==null || activationKey.equals("")) {
+                throw new MiraclClientException("Activation key not been found in the pull verification request.");
+            }
+
+            if(expirationTime.before(new Date()))
+            {
+                throw new MiraclClientException("Pull pluggable verification request has expired.");
+            }
+            return new IdentityActivationModel(mpinIdHash, activationKey, subject);
+
+        } catch (ParseException e) {
+            LOGGER.log(Level.SEVERE, "Unable to set pluggable verification pull request content type.", e);
+            throw new MiraclClientException("An error occured while pulling pluggable verification data.");
+        } catch (MalformedURLException e) {
+            LOGGER.log(Level.SEVERE, "Unable to create a pluggable verification pull POST request.", e);
+            throw new MiraclClientException("An error occured while pulling pluggable verification data.");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Unable to execute a pluggable verification pull POST request.", e);
+            throw new MiraclClientException("An error occured while pulling pluggable verification data.");
+        }
+    }
+
+    public static String getClientActivationEndpointURL() {
+        return String.format("%s%s", MiraclConfig.ISSUER, MiraclConfig.PLUGGABLE_VERIFICATION_ACTIVATION_ENDPOINT);
+    }
+
+    /**
+     * Creates a client-id:client-secret base64 encoded client credentials string.
+     * @return a client-id:client-secret base64 encoded client credentials string.
+     */
+    private String getClientCredentials() {
+	    return String.format("Basic %s",
+                Base64.getEncoder().encodeToString(String.format("%s:%s",clientId,clientSecret.getValue()).getBytes())
+        );
+    }
 }

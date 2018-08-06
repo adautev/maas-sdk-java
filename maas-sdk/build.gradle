@@ -16,9 +16,13 @@ repositories {
 }
 
 dependencies {
-    compile 'com.nimbusds:oauth2-oidc-sdk:5.21'
-    testCompile 'org.testng:testng:6.10'
+    compile 'com.nimbusds:oauth2-oidc-sdk:5.64.2'
+
+    testCompile 'org.testng:testng:6.14.3'
+    testCompile group: 'com.xebialabs.restito', name: 'restito', version: '0.9.3'
+    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
 }
+
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava
 }
