@@ -1,9 +1,0 @@
-{
-  "client_id": "kfyctv4w9hklx",
-  "secret": "U5DFHFnxKM3GsOTIcnzHYSHwDIMGkbSuJZIbRaCYnU4",
-  "redirect_uri": "http://dautev.ngrok.io/login",
-  "serverPort": 5000,
-  "use_proxy": false,
-  "proxy_host": "PROXY_HOST",
-  "proxy_port": "PROXY_PORT"
-}

@@ -2,13 +2,41 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6014f8ed-f3ac-451b-9cf8-b7ea44459850" name="Default" comment="Tidied up code. Added more unit tests.">
-      <change beforePath="$PROJECT_DIR$/maas-sdk/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/maas-sdk/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/IdentityActivationModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/IdentityActivationModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maas-sdk/src/test/java/com/miracl/maas_sdk/MiraclClientTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/maas-sdk/src/test/java/com/miracl/maas_sdk/MiraclClientTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sample-spark-pv/src/main/java/com/miracl/maas_samples/SparkSamplePV.java" beforeDir="false" afterPath="$PROJECT_DIR$/sample-spark-pv/src/main/java/com/miracl/maas_samples/SparkSamplePV.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sample-spark-pv/src/main/resources/miracl.json" beforeDir="false" afterPath="$PROJECT_DIR$/sample-spark-pv/src/main/resources/miracl.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/IdentityActivationModel.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/JwtValidator$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/JwtValidator$2.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/JwtValidator.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclClient.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclClientException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclConfig.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclMapStatePreserver.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclMessages.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclStatePreserver.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/production/classes/com/miracl/maas_sdk/MiraclSystemException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/com/miracl/maas_sdk/JwtValidatorNoNetworkMock.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/com/miracl/maas_sdk/JwtValidatorTest$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/com/miracl/maas_sdk/JwtValidatorTest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/com/miracl/maas_sdk/MiraclClientNoNetworkMock.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/com/miracl/maas_sdk/MiraclClientTest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/com/miracl/maas_sdk/MiraclExceptionTest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/com/miracl/maas_sdk/MockURLConnection.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/jwk.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/jwt.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/maas-sdk/out/test/classes/test.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark-pv/out/production/classes/com/miracl/maas_samples/MiraclSparkSessionWrapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark-pv/out/production/classes/com/miracl/maas_samples/ResourcesLoader.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark-pv/out/production/classes/com/miracl/maas_samples/SparkSamplePV$PLUGGABLE_VERIFICATION_MODE.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark-pv/out/production/classes/com/miracl/maas_samples/SparkSamplePV.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark-pv/out/production/classes/miracl.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark-pv/out/production/classes/templates/index.pebble" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark/out/production/classes/com/miracl/maas_samples/MiraclSparkSessionWrapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark/out/production/classes/com/miracl/maas_samples/ResourcesLoader.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark/out/production/classes/com/miracl/maas_samples/SparkSample.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark/out/production/classes/miracl.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sample-spark/out/production/classes/templates/index.pebble" beforeDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.gradle/" />
     <ignored path="$PROJECT_DIR$/build/" />
@@ -48,11 +76,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="SparkSamplePV.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="SparkSamplePV.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sample-spark-pv/src/main/java/com/miracl/maas_samples/SparkSamplePV.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="253">
+            <state relative-caret-position="2375">
               <caret line="146" selection-start-line="146" selection-end-line="146" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -61,7 +92,7 @@
         <entry file="file://$PROJECT_DIR$/sample-spark-pv/src/main/resources/miracl.json">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="171">
-              <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+              <caret line="9" selection-start-line="9" selection-end-line="9" />
             </state>
           </provider>
         </entry>
@@ -69,8 +100,8 @@
       <file leaf-file-name="Invoker.java" pinned="false" current-in-tab="false">
         <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.testng/testng/6.14.3/bfd2538501a129a142fe8366169c48b91609dc0b/testng-6.14.3-sources.jar!/org/testng/internal/Invoker.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-12">
-              <caret line="993" column="33" lean-forward="true" selection-start-line="993" selection-start-column="33" selection-end-line="993" selection-end-column="33" />
+            <state relative-caret-position="18050">
+              <caret line="993" column="33" selection-start-line="993" selection-start-column="33" selection-end-line="993" selection-end-column="33" />
             </state>
           </provider>
         </entry>
@@ -78,8 +109,8 @@
       <file leaf-file-name="MiraclClientTest.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/maas-sdk/src/test/java/com/miracl/maas_sdk/MiraclClientTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="419">
-              <caret line="190" lean-forward="true" selection-start-line="190" selection-end-line="190" />
+            <state relative-caret-position="2907">
+              <caret line="190" selection-start-line="190" selection-end-line="190" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -90,61 +121,38 @@
       <file leaf-file-name="MiraclClient.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclClient.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
+            <state relative-caret-position="3724">
               <caret line="226" selection-start-line="226" selection-end-line="226" />
               <folding>
                 <element signature="docComment;class#MiraclClient#0" />
-                <element signature="e#2198#2429#0" />
-                <element signature="e#2198#2579#0" />
-                <element signature="e#2582#2857#0" />
-                <element signature="e#2582#3261#0" />
-                <element signature="e#3267#3455#0" />
-                <element signature="e#3643#4069#0" />
-                <element signature="e#3643#4484#0" />
-                <element signature="e#4579#5018#0" />
-                <element signature="e#4579#5264#0" />
-                <element signature="e#5267#5454#0" />
-                <element signature="e#5267#5753#0" />
-                <element signature="e#5756#6315#0" />
-                <element signature="e#5756#6898#0" />
-                <element signature="e#6901#7533#0" />
-                <element signature="e#8380#8605#0" />
-                <element signature="e#8380#8824#0" />
-                <element signature="e#8827#9108#0" />
-                <element signature="e#8827#9632#0" />
-                <element signature="e#9635#9750#0" />
-                <element signature="e#10016#10270#0" />
-                <element signature="e#10016#10493#0" />
-                <element signature="e#10496#10882#0" />
-                <element signature="e#10983#11220#0" />
-                <element signature="e#10983#11353#0" />
-                <element signature="e#11356#12156#0" />
-                <element signature="e#11737#11797#0" />
-                <element signature="e#12159#12413#0" />
-                <element signature="e#12159#12927#0" />
-                <element signature="e#12930#13257#0" />
-                <element signature="e#12930#13477#0" />
-                <element signature="e#13480#13861#0" />
-                <element signature="e#13480#14083#0" />
-                <element signature="e#14086#14538#0" />
-                <element signature="e#14086#14792#0" />
-                <element signature="e#14795#15242#0" />
-                <element signature="e#14795#15489#0" />
-                <element signature="e#15495#15706#0" />
-                <element signature="e#15495#16589#0" />
-                <element signature="e#16595#16772#0" />
-                <element signature="e#16595#16972#0" />
-                <element signature="e#16978#17256#0" />
-                <element signature="e#16978#17399#0" />
-                <element signature="e#17405#17683#0" />
-                <element signature="e#17405#18100#0" />
-                <element signature="e#18106#18279#0" />
-                <element signature="e#18106#18966#0" />
-                <element signature="e#18972#19263#0" />
-                <element signature="e#21098#21320#0" />
-                <element signature="e#24052#24229#0" />
-                <element signature="e#24235#24412#0" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="index.pebble" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sample-spark/src/main/resources/templates/index.pebble">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1938">
+              <caret line="102" column="115" selection-start-line="102" selection-start-column="8" selection-end-line="102" selection-end-column="115" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="index.pebble" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sample-spark-pv/src/main/resources/templates/index.pebble">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="347">
+              <caret line="107" selection-start-line="107" selection-end-line="107" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="133">
+              <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
             </state>
           </provider>
         </entry>
@@ -152,7 +160,7 @@
       <file leaf-file-name="HTTPRequest.java" pinned="false" current-in-tab="false">
         <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.nimbusds/oauth2-oidc-sdk/5.64.2/4b510443b66ffb99acda3a516abef6ac3378ab7e/oauth2-oidc-sdk-5.64.2-sources.jar!/com/nimbusds/oauth2/sdk/http/HTTPRequest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="159">
+            <state relative-caret-position="4541">
               <caret line="270" column="16" selection-start-line="270" selection-start-column="16" selection-end-line="270" selection-end-column="16" />
             </state>
           </provider>
@@ -197,8 +205,8 @@
       <find>login fai</find>
       <find>identity</find>
       <find>main</find>
-      <find>localh</find>
       <find>basic</find>
+      <find>localh</find>
     </findStrings>
     <replaceStrings>
       <replace>private</replace>
@@ -1169,7 +1177,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/sample-spark-pv/src/main/java/com/miracl/maas_samples/SparkSample.java" />
-        <option value="$PROJECT_DIR$/sample-spark-pv/src/main/resources/templates/index.pebble" />
         <option value="$PROJECT_DIR$/sample-spark-pv/build.gradle" />
         <option value="$PROJECT_DIR$/sample-spark/src/main/resources/miracl.json" />
         <option value="$PROJECT_DIR$/maas-sdk/src/test/java/com/miracl/maas_sdk/JwtValidatorNoNetworkMock.java" />
@@ -1182,6 +1189,8 @@
         <option value="$PROJECT_DIR$/maas-sdk/src/test/java/com/miracl/maas_sdk/MiraclClientTest.java" />
         <option value="$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclClient.java" />
         <option value="$PROJECT_DIR$/sample-spark-pv/src/main/java/com/miracl/maas_samples/SparkSamplePV.java" />
+        <option value="$PROJECT_DIR$/sample-spark-pv/src/main/resources/templates/index.pebble" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -1199,6 +1208,56 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+            </path>
+            <path>
+              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+            </path>
+            <path>
+              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+            </path>
+            <path>
+              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
+              <item name="templates" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="Scope" />
       <pane id="PackagesPane">
         <subPane>
@@ -1221,105 +1280,6 @@
               <item name="maas" type="58d84e3e:PackageViewProjectNode" />
               <item name="sample-spark-pv" type="eaaa3913:PackageViewModuleGroupNode" />
               <item name="sample-spark-pv_test" type="616d4139:PackageViewModuleNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="maas_sdk" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="maas-sdk" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="maas-sdk-java-fork" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="sample-spark-pv" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="maas" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
             </path>
           </expand>
           <select />
@@ -1620,7 +1580,14 @@
       <option name="project" value="LOCAL" />
       <updated>1533541379380</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Completed pull verification.">
+      <created>1533573106350</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1533573106350</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1661,32 +1628,32 @@
     <layout>
       <window_info anchor="right" id="Palette" order="3" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.49195278" weight="0.32858837" />
       <window_info anchor="right" id="Palette&#9;" order="3" />
       <window_info id="Image Layers" order="2" />
       <window_info anchor="right" id="Capture Analysis" order="3" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.3921674" side_tool="true" visible="true" weight="0.4163701" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.3921674" side_tool="true" visible="true" weight="0.41992882" />
       <window_info anchor="right" id="Maven Projects" order="3" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49624464" weight="0.32977462" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.49946353" weight="0.32977462" />
       <window_info id="Capture Tool" order="2" />
       <window_info id="Designer" order="2" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25751072" />
-      <window_info anchor="bottom" auto_hide="true" id="Build" order="7" sideWeight="0.4967811" weight="0.32858837" />
-      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.59227467" weight="0.32977462" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26126608" />
       <window_info anchor="right" id="Gradle" order="3" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info id="UI Designer" order="2" />
       <window_info anchor="right" id="Theme Preview" order="3" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.6078326" weight="0.4163701" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.6078326" visible="true" weight="0.4163701" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" auto_hide="true" id="Build" order="7" sideWeight="0.4967811" weight="0.32858837" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.59227467" weight="0.32977462" />
+      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.49195278" weight="0.32858837" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -1695,7 +1662,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Implemented push pluggable verification." />
     <MESSAGE value="Tidied up code. Added more unit tests." />
-    <option name="LAST_COMMIT_MESSAGE" value="Tidied up code. Added more unit tests." />
+    <MESSAGE value="Completed pull verification." />
+    <option name="LAST_COMMIT_MESSAGE" value="Completed pull verification." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1878,27 +1846,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.nimbusds/nimbus-jose-jwt/5.14/28f09aaed2101cd9ce33021f59d1bbc3e90e483f/nimbus-jose-jwt-5.14-sources.jar!/com/nimbusds/jose/proc/JOSEProcessorConfiguration.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="64" column="9" selection-start-line="64" selection-start-column="9" selection-end-line="64" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.nimbusds/nimbus-jose-jwt/5.14/28f09aaed2101cd9ce33021f59d1bbc3e90e483f/nimbus-jose-jwt-5.14-sources.jar!/com/nimbusds/jwt/proc/JWTProcessorConfiguration.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="530">
-          <caret line="97" column="9" selection-start-line="97" selection-start-column="9" selection-end-line="97" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.nimbusds/nimbus-jose-jwt/5.14/28f09aaed2101cd9ce33021f59d1bbc3e90e483f/nimbus-jose-jwt-5.14-sources.jar!/com/nimbusds/jose/proc/JWSVerificationKeySelector.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="265">
-          <caret line="139" selection-start-line="139" selection-end-line="139" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.minidev/json-smart/2.3/36c61f1b839bde5b284528cb76f6811efbe0f08b/json-smart-2.3-sources.jar!/net/minidev/json/JSONValue.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="152">
@@ -1910,10 +1857,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="129">
           <caret line="785" column="20" selection-start-line="785" selection-start-column="20" selection-end-line="785" selection-end-column="20" />
-          <folding>
-            <element signature="e#25275#25276#0" expanded="true" />
-            <element signature="e#25317#25318#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1999,9 +1942,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="140">
           <caret line="659" selection-start-line="659" selection-end-line="659" />
-          <folding>
-            <element signature="e#27140#27153#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2103,10 +2043,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="140">
           <caret line="768" column="62" selection-start-line="768" selection-start-column="62" selection-end-line="768" selection-end-column="62" />
-          <folding>
-            <element signature="e#27239#27240#0" expanded="true" />
-            <element signature="e#27310#27311#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2121,14 +2057,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="164">
           <caret line="23" column="12" selection-start-line="23" selection-start-column="12" selection-end-line="23" selection-end-column="12" />
-          <folding>
-            <element signature="e#717#718#0" expanded="true" />
-            <element signature="e#757#758#0" expanded="true" />
-            <element signature="e#7139#7140#0" expanded="true" />
-            <element signature="e#7191#7192#0" expanded="true" />
-            <element signature="e#7642#7643#0" expanded="true" />
-            <element signature="e#7678#7679#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2150,9 +2078,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="172">
           <caret line="678" selection-start-line="678" selection-end-line="678" />
-          <folding>
-            <element signature="e#16259#16260#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2160,10 +2085,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="304">
           <caret line="19" column="27" selection-start-line="19" selection-start-column="27" selection-end-line="19" selection-end-column="27" />
-          <folding>
-            <element signature="e#432#433#0" expanded="true" />
-            <element signature="e#475#476#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2178,9 +2099,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
           <caret line="165" selection-start-line="165" selection-end-line="165" />
-          <folding>
-            <element signature="e#3481#3482#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2195,10 +2113,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="923">
           <caret line="69" column="11" selection-start-line="69" selection-start-column="11" selection-end-line="69" selection-end-column="11" />
-          <folding>
-            <element signature="e#2602#2603#0" expanded="true" />
-            <element signature="e#2635#2636#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2234,32 +2148,19 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
           <caret line="205" selection-start-line="205" selection-end-line="205" />
-          <folding>
-            <element signature="e#6464#6465#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.testng/testng/6.14.3/bfd2538501a129a142fe8366169c48b91609dc0b/testng-6.14.3-sources.jar!/org/testng/internal/Invoker.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-12">
-          <caret line="993" column="33" lean-forward="true" selection-start-line="993" selection-start-column="33" selection-end-line="993" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/maas-sdk/src/test/java/com/miracl/maas_sdk/MiraclClientTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="419">
-          <caret line="190" lean-forward="true" selection-start-line="190" selection-end-line="190" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state relative-caret-position="18050">
+          <caret line="993" column="33" selection-start-line="993" selection-start-column="33" selection-end-line="993" selection-end-column="33" />
         </state>
       </provider>
     </entry>
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.nimbusds/oauth2-oidc-sdk/5.64.2/4b510443b66ffb99acda3a516abef6ac3378ab7e/oauth2-oidc-sdk-5.64.2-sources.jar!/com/nimbusds/oauth2/sdk/http/HTTPRequest.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="159">
+        <state relative-caret-position="4541">
           <caret line="270" column="16" selection-start-line="270" selection-start-column="16" selection-end-line="270" selection-end-column="16" />
         </state>
       </provider>
@@ -2267,74 +2168,58 @@
     <entry file="file://$PROJECT_DIR$/sample-spark-pv/src/main/resources/miracl.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="171">
-          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclClient.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="226" selection-start-line="226" selection-end-line="226" />
-          <folding>
-            <element signature="docComment;class#MiraclClient#0" />
-            <element signature="e#2198#2429#0" />
-            <element signature="e#2198#2579#0" />
-            <element signature="e#2582#2857#0" />
-            <element signature="e#2582#3261#0" />
-            <element signature="e#3267#3455#0" />
-            <element signature="e#3643#4069#0" />
-            <element signature="e#3643#4484#0" />
-            <element signature="e#4579#5018#0" />
-            <element signature="e#4579#5264#0" />
-            <element signature="e#5267#5454#0" />
-            <element signature="e#5267#5753#0" />
-            <element signature="e#5756#6315#0" />
-            <element signature="e#5756#6898#0" />
-            <element signature="e#6901#7533#0" />
-            <element signature="e#8380#8605#0" />
-            <element signature="e#8380#8824#0" />
-            <element signature="e#8827#9108#0" />
-            <element signature="e#8827#9632#0" />
-            <element signature="e#9635#9750#0" />
-            <element signature="e#10016#10270#0" />
-            <element signature="e#10016#10493#0" />
-            <element signature="e#10496#10882#0" />
-            <element signature="e#10983#11220#0" />
-            <element signature="e#10983#11353#0" />
-            <element signature="e#11356#12156#0" />
-            <element signature="e#11737#11797#0" />
-            <element signature="e#12159#12413#0" />
-            <element signature="e#12159#12927#0" />
-            <element signature="e#12930#13257#0" />
-            <element signature="e#12930#13477#0" />
-            <element signature="e#13480#13861#0" />
-            <element signature="e#13480#14083#0" />
-            <element signature="e#14086#14538#0" />
-            <element signature="e#14086#14792#0" />
-            <element signature="e#14795#15242#0" />
-            <element signature="e#14795#15489#0" />
-            <element signature="e#15495#15706#0" />
-            <element signature="e#15495#16589#0" />
-            <element signature="e#16595#16772#0" />
-            <element signature="e#16595#16972#0" />
-            <element signature="e#16978#17256#0" />
-            <element signature="e#16978#17399#0" />
-            <element signature="e#17405#17683#0" />
-            <element signature="e#17405#18100#0" />
-            <element signature="e#18106#18279#0" />
-            <element signature="e#18106#18966#0" />
-            <element signature="e#18972#19263#0" />
-            <element signature="e#21098#21320#0" />
-            <element signature="e#24052#24229#0" />
-            <element signature="e#24235#24412#0" />
-          </folding>
+          <caret line="9" selection-start-line="9" selection-end-line="9" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/sample-spark-pv/src/main/java/com/miracl/maas_samples/SparkSamplePV.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="253">
+        <state relative-caret-position="2375">
           <caret line="146" selection-start-line="146" selection-end-line="146" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/maas-sdk/src/test/java/com/miracl/maas_sdk/MiraclClientTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2907">
+          <caret line="190" selection-start-line="190" selection-end-line="190" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/maas-sdk/src/main/java/com/miracl/maas_sdk/MiraclClient.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3724">
+          <caret line="226" selection-start-line="226" selection-end-line="226" />
+          <folding>
+            <element signature="docComment;class#MiraclClient#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sample-spark/src/main/resources/templates/index.pebble">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1938">
+          <caret line="102" column="115" selection-start-line="102" selection-start-column="8" selection-end-line="102" selection-end-column="115" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sample-spark-pv/src/main/resources/templates/index.pebble">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="347">
+          <caret line="107" selection-start-line="107" selection-end-line="107" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="133">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
         </state>
       </provider>
     </entry>
