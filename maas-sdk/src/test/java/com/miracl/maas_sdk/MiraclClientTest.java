@@ -286,7 +286,7 @@ public class MiraclClientTest {
                         IdentityActivationModel.MPIN_ID_HASH_KEY,
                         IdentityActivationModel.USER_ID_KEY,
                         IdentityActivationModel.EXPIRATION_TIME,
-                        new Date(new Date().getTime()).getTime())));
+                        new Date(new Date().getTime()).getTime()/1000)));
 
         client.pullVerification("dummy", "http://localhost:" +server.getPort()+ MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
     }

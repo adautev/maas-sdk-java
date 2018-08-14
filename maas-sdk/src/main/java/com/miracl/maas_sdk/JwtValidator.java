@@ -119,17 +119,15 @@ public class JwtValidator {
 	public boolean validateToken(String token) {
         try {
             extractClaims(token);
+			return true;
         } catch (ParseException e) {
             e.printStackTrace();
-            return false;
         } catch (JOSEException e) {
             e.printStackTrace();
-            return false;
         } catch (BadJOSEException e) {
             e.printStackTrace();
-            return false;
         }
-        return true;
+		return false;
 	}
 
 	/**
@@ -145,30 +143,28 @@ public class JwtValidator {
     public boolean validatePushToken(String newUserToken) {
         try {
             ConfigurableJWTProcessor<SecurityContext> jwtProcessor = buildPushJwtProcessor();
-            JWTClaimsSet claims = jwtProcessor.process(newUserToken, null);
+            jwtProcessor.process(newUserToken, null);
+            return true;
         } catch (ParseException e) {
             e.printStackTrace();
-            return false;
         } catch (JOSEException e) {
             e.printStackTrace();
-            return false;
         } catch (BadJOSEException e) {
             e.printStackTrace();
-            return false;
         }
-        return true;
+        return false;
     }
 
     private ConfigurableJWTProcessor<SecurityContext> buildPushJwtProcessor() {
         ConfigurableJWTProcessor<SecurityContext> processor;
         JWKSource<SecurityContext> keySource;
         JWSKeySelector<SecurityContext> keySelector;
-
         processor = new DefaultJWTProcessor<>();
         keySource = new RemoteJWKSet<>(keySourceUrl);
         keySelector = new JWSVerificationKeySelector<>(algorithm, keySource);
         processor.setJWSKeySelector(keySelector);
         processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<SecurityContext>() {
+
             private void verifyClaims(JWTClaimsSet claimsSet) throws BadJWTException {
                 Date expirationTime = claimsSet.getExpirationTime();
                 if (expirationTime == null) {
@@ -196,6 +192,7 @@ public class JwtValidator {
                     throw new BadJWTException("Token issuer not accepted");
                 }
             }
+
             @Override
             public void verify(JWTClaimsSet claimsSet, SecurityContext context) throws BadJWTException {
                 super.verify(claimsSet, context);
