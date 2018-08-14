@@ -5,3 +5,4 @@ target
 .coverage
 htmlcov
 out/
+.idea

@@ -184,7 +184,7 @@ public class JwtValidator {
                 if(newUser == null) {
                     throw new MiraclSystemException("\"newUser\" key not found in activation JWT");
                 }
-                String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY);
+                String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH);
                 if(mpinIdHash == null || mpinIdHash.equals("")) {
                     throw new MiraclSystemException(String.format("\"%s\" key not found in activation JWT", IdentityActivationModel.MPIN_ID_HASH_KEY));
                 }

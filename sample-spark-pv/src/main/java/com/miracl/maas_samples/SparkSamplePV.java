@@ -285,6 +285,7 @@ public class SparkSamplePV {
         } else {
             try {
                 miracl.activateIdentity(usersWaitingForActivation.get(subject), MiraclClient.getClientActivationEndpointURL());
+                usersWaitingForActivation.remove(subject);
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, String.format("Unable to activate identity subject %s", subject), ex);
                 res.status(PLUGGABLE_VERIFICATION_NOT_SUCCESSFUL_STATUS_CODE);

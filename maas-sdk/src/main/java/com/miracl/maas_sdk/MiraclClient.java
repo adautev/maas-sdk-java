@@ -463,9 +463,9 @@ public class MiraclClient {
 		if(newUser == null) {
 			throw new MiraclClientException("\"newUser\" key not found in activation JWT");
 		}
-		String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY);
+		String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH);
 		String activationKey = ((JSONObject) newUser).getAsString(IdentityActivationModel.ACTIVATION_KEY);
-		String subject = ((JSONObject) newUser).getAsString(IdentityActivationModel.USER_ID_KEY);
+		String subject = ((JSONObject) newUser).getAsString(IdentityActivationModel.USER_ID_KEY_PUSH);
 		return new IdentityActivationModel(mpinIdHash, activationKey, subject);
 	}
 
@@ -546,7 +546,7 @@ public class MiraclClient {
             activationRequest.setAuthorization(getClientCredentials());
             activationRequest.setContentType(PLUGGABLE_VERIFICATION_ACTIVATION_REQUEST_HTTP_CONTENT_TYPE);
             JSONObject activationRequestBody = new JSONObject();
-            activationRequestBody.appendField(IdentityActivationModel.MPIN_ID_HASH_KEY, identityActivationModel.getМPinIdHash());
+            activationRequestBody.appendField(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH, identityActivationModel.getМPinIdHash());
             activationRequestBody.appendField(IdentityActivationModel.ACTIVATION_KEY, identityActivationModel.getActivationKey());
             activationRequest.setQuery(activationRequestBody.toJSONString());
             HTTPResponse response = activationRequest.send();
