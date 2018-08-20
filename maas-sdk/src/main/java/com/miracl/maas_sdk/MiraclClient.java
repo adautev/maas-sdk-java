@@ -614,7 +614,7 @@ public class MiraclClient {
         }
     }
 
-    public static String getClientActivationEndpointURL() {
+    protected String getClientActivationEndpointURL() {
         return String.format("%s%s", MiraclConfig.ISSUER, MiraclConfig.PLUGGABLE_VERIFICATION_ACTIVATION_ENDPOINT);
     }
 

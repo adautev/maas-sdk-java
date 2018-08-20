@@ -251,7 +251,7 @@ public class MiraclClientTest {
 
     @Test
     public void testGetClientActivationEndpointURL() {
-        Assert.assertEquals(String.format("%s%s", MiraclConfig.ISSUER, MiraclConfig.PLUGGABLE_VERIFICATION_ACTIVATION_ENDPOINT), MiraclClient.getClientActivationEndpointURL());
+        Assert.assertEquals(String.format("%s%s", MiraclConfig.ISSUER, MiraclConfig.PLUGGABLE_VERIFICATION_ACTIVATION_ENDPOINT), new MiraclClient("clientId", "clientSecret", "http://redirect.url").getClientActivationEndpointURL());
     }
 
     @Test
@@ -259,7 +259,7 @@ public class MiraclClientTest {
         whenHttp(server)
                 .match(endsWithUri(MiraclConfig.PLUGGABLE_VERIFICATION_ACTIVATION_ENDPOINT))
                 .then(status(HttpStatus.OK_200));
-
+        MiraclConfig.setIssuer(String.format("http://localhost:%s", server.getPort()));
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
     }
 

@@ -94,7 +94,7 @@ public class JwtValidatorTest {
     public void testBuildJwtProcessor_BadUrl() {
         try {
             validator = new JwtValidator(JWSAlgorithm.HS256, "bad URL");
-            validator.buildJwtProcessor(JWSAlgorithm.RS256);
+            validator.buildJwtProcessor(JWSAlgorithm.HS256);
         } catch (MiraclClientException e) {
             Assert.assertTrue(e.getMessage().contains("bad URL"));
             return;
@@ -104,18 +104,17 @@ public class JwtValidatorTest {
     }
 
     @Test
-    public void testBuildJwtProcessor() throws Exception {
-        URL url = createMockHttpUrl("jwk.json");
-
-        ConfigurableJWTProcessor<SecurityContext> processor;
-        validator = new JwtValidatorNoNetworkMock(JWSAlgorithm.HS256, url);
-        processor = validator.buildJwtProcessor(JWSAlgorithm.HS256);
-
+    public void testBuildJwtProcessor() {
         try {
+            URL url = createMockHttpUrl("jwk.json");
+            ConfigurableJWTProcessor<SecurityContext> processor;
+            validator = new JwtValidatorNoNetworkMock(JWSAlgorithm.HS256, url);
+            processor = validator.buildJwtProcessor(JWSAlgorithm.HS256);
             JWTClaimsSet claims = processor.process(properties.getProperty("jwt.valid"), null);
             Assert.assertEquals(claims.getClaim("Email"), "test2@miracl.com");
-        } catch (ParseException | BadJOSEException | JOSEException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            Assert.fail();
         }
     }
 
