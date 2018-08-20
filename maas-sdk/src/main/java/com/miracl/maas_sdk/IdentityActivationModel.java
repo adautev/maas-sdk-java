@@ -8,18 +8,18 @@ public class IdentityActivationModel {
     static final String MPIN_ID_HASH_KEY_PUSH = "hashMPinID";
     static final String ACTIVATION_KEY = "activateKey";
     private final String subject;
-    private String mPinIdHash;
+    private String mpinIdHash;
     private String activationKey;
 
-    IdentityActivationModel(String mPinIdHash, String activateKey, String subject)
+    IdentityActivationModel(String mpinIdHash, String activateKey, String subject)
     {
         this.subject = subject;
-        this.mPinIdHash = mPinIdHash;
+        this.mpinIdHash = mpinIdHash;
         this.activationKey = activateKey;
     }
 
     String getМPinIdHash() {
-        return mPinIdHash;
+        return mpinIdHash;
     }
 
     String getActivationKey() {

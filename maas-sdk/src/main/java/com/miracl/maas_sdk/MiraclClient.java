@@ -1,5 +1,7 @@
 package com.miracl.maas_sdk;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonObject;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.*;
@@ -33,445 +35,436 @@ import java.util.logging.Logger;
  */
 public class MiraclClient {
     private static final String KEY_STATE = "miracl_state";
-	private static final String KEY_NONCE = "miracl_nonce";
-	private static final String KEY_TOKEN = "miracl_token";
-	private static final String KEY_USERINFO = "miracl_userinfo";
+    private static final String KEY_NONCE = "miracl_nonce";
+    private static final String KEY_TOKEN = "miracl_token";
+    private static final String KEY_USERINFO = "miracl_userinfo";
 
-	private static final Logger LOGGER = Logger.getLogger(MiraclClient.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MiraclClient.class.getName());
     private static final int PLUGGABLE_VERIFICATION_ACTIVATION_ERROR_STATUS_CODE = 404;
     private static final int PLUGGABLE_VERIFICATION_PULL_ERROR_STATUS_CODE = 404;
     private static final int PLUGGABLE_VERIFICATION_PULL_UNAUTHORIZED_STATUS_CODE = 400;
     private static final String PLUGGABLE_VERIFICATION_ACTIVATION_REQUEST_HTTP_CONTENT_TYPE = "application/json";
     private static final String PLUGGABLE_VERIFICATION_PULL_REQUEST_HTTP_CONTENT_TYPE = "application/json";
     private static final String PLUGGABLE_VERIFICATION_PULL_USER_ID_FIELD_KEY = "userId";
+    private static final String PLUGGABLE_VERIFICATION_PUSH_REQUEST_NEW_USER_TOKEN_KEY = "new_user_token";
     private static final String ALG_HEADER_KEY = "alg";
 
     private final ClientID clientId;
-	private final Secret clientSecret;
-	private final URI redirectUrl;
-	private final OIDCProviderMetadata providerMetadata;
+    private final Secret clientSecret;
+    private final URI redirectUrl;
+    private final OIDCProviderMetadata providerMetadata;
     private String providerInfo;
 
     /**
-	 * @param clientId
-	 *            Client ID
-	 * @param clientSecret
-	 *            Client secret
-	 * @param redirectUrl
-	 *            Redirect URL
-	 * @throws MiraclException
-	 *             if parameters can't be parsed
-	 */
-	public MiraclClient(String clientId, String clientSecret, String redirectUrl) {
-		this(clientId, clientSecret, redirectUrl, MiraclConfig.ISSUER);
-	}
+     * @param clientId     Client ID
+     * @param clientSecret Client secret
+     * @param redirectUrl  Redirect URL
+     * @throws MiraclException if parameters can't be parsed
+     */
+    public MiraclClient(String clientId, String clientSecret, String redirectUrl) {
+        this(clientId, clientSecret, redirectUrl, MiraclConfig.ISSUER);
+    }
 
-	/**
-	 * @param clientId
-	 *            Client ID
-	 * @param clientSecret
-	 *            Client secret
-	 * @param redirectUrl
-	 *            Redirect URL
-	 * @param issuer
-	 *            Issuer URL
-	 * @throws MiraclException
-	 *             if parameters can't be parsed
-	 */
-	public MiraclClient(String clientId, String clientSecret, String redirectUrl, String issuer) {
-		try {
-			this.clientId = new ClientID(clientId);
-			this.clientSecret = new Secret(clientSecret);
-			this.redirectUrl = new URI(redirectUrl);
-			providerMetadata = getProviderMetadata(issuer);
+    /**
+     * @param clientId     Client ID
+     * @param clientSecret Client secret
+     * @param redirectUrl  Redirect URL
+     * @param issuer       Issuer URL
+     * @throws MiraclException if parameters can't be parsed
+     */
+    public MiraclClient(String clientId, String clientSecret, String redirectUrl, String issuer) {
+        try {
+            this.clientId = new ClientID(clientId);
+            this.clientSecret = new Secret(clientSecret);
+            this.redirectUrl = new URI(redirectUrl);
+            providerMetadata = getProviderMetadata(issuer);
 
-		} catch (URISyntaxException | ParseException | IOException e) {
-			throw new MiraclSystemException(e);
-		}
-	}
+        } catch (URISyntaxException | ParseException | IOException e) {
+            throw new MiraclSystemException(e);
+        }
+    }
 
     /**
      * Forms a pluggable verification pull endpoint URL, according to the current MiraclConfig values.
+     *
      * @return A pluggable verification pull endpoint fully qualified URL
      */
     public static String getPluggableVerificationPullEndpointURL() {
-	    return String.format("%s%s", MiraclConfig.ISSUER, MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
+        return String.format("%s%s", MiraclConfig.ISSUER, MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
     }
 
     /**
-	 * Perform a Provider Configuration Request to the issuer, returning its
-	 * metadata.
-	 * 
-	 * @see <a href=
-	 *      "https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationRequest">OpenID
-	 *      Connect Discovery</a>
-	 * @param issuer
-	 *            Issuer URL
-	 * @return provider configuration metadata
-	 * @throws URISyntaxException
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	public OIDCProviderMetadata getProviderMetadata(String issuer)
-			throws URISyntaxException, IOException, ParseException {
-            URI issuerURI = new URI(issuer);
-            URL providerConfigurationURL = issuerURI.resolve(MiraclConfig.OPENID_CONFIG_ENDPOINT).toURL();
-            providerInfo = requestProviderInfo(providerConfigurationURL);
+     * Perform a Provider Configuration Request to the issuer, returning its
+     * metadata.
+     *
+     * @param issuer Issuer URL
+     * @return provider configuration metadata
+     * @throws URISyntaxException
+     * @throws IOException
+     * @throws ParseException
+     * @see <a href=
+     * "https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationRequest">OpenID
+     * Connect Discovery</a>
+     */
+    public OIDCProviderMetadata getProviderMetadata(String issuer)
+            throws URISyntaxException, IOException, ParseException {
+        URI issuerURI = new URI(issuer);
+        URL providerConfigurationURL = issuerURI.resolve(MiraclConfig.OPENID_CONFIG_ENDPOINT).toURL();
+        providerInfo = requestProviderInfo(providerConfigurationURL);
 
-            return OIDCProviderMetadata.parse(providerInfo);
-	}
+        return OIDCProviderMetadata.parse(providerInfo);
+    }
 
     public OIDCProviderMetadata getProviderMetadata() {
-	    return providerMetadata;
+        return providerMetadata;
     }
-	/**
-	 * Use a proxy for all out-going requests performed by the library.
-	 * 
-	 * If a proxy server is required, useProxy should be called immediately
-	 * after constructing a MiraclClient. Proxy settings are applied VM-wide.
-	 * The proxy will be used for both HTTP and HTTPS requests.
-	 * 
-	 * @param host
-	 *            Hostname for the proxy server, for example "localhost"
-	 * @param port
-	 *            Port for the proxy server
-	 */
-	public static void useProxy(String host, String port) {
-		System.setProperty("http.proxyHost", host);
-		System.setProperty("https.proxyHost", host);
-		System.setProperty("http.proxyPort", port);
-		System.setProperty("https.proxyPort", port);
-	}
 
-	/**
-	 * @param url
-	 *            URL pointing to openid-configuration
-	 * @return String containing contents of URL
-	 * @throws IOException
-	 *             In case of network issues
-	 */
-	protected String requestProviderInfo(URL url) throws IOException {
-		InputStream stream = url.openStream();
+    /**
+     * Use a proxy for all out-going requests performed by the library.
+     * <p>
+     * If a proxy server is required, useProxy should be called immediately
+     * after constructing a MiraclClient. Proxy settings are applied VM-wide.
+     * The proxy will be used for both HTTP and HTTPS requests.
+     *
+     * @param host Hostname for the proxy server, for example "localhost"
+     * @param port Port for the proxy server
+     */
+    public static void useProxy(String host, String port) {
+        System.setProperty("http.proxyHost", host);
+        System.setProperty("https.proxyHost", host);
+        System.setProperty("http.proxyPort", port);
+        System.setProperty("https.proxyPort", port);
+    }
 
-		String providerInfo = null;
-		try (java.util.Scanner s = new java.util.Scanner(stream)) {
-			providerInfo = s.useDelimiter("\\A").hasNext() ? s.next() : "";
-		}
-		return providerInfo;
-	}
+    /**
+     * @param url URL pointing to openid-configuration
+     * @return String containing contents of URL
+     * @throws IOException In case of network issues
+     */
+    protected String requestProviderInfo(URL url) throws IOException {
+        InputStream stream = url.openStream();
 
-	/**
-	 * Get {@link URI} for authorization request. After user is redirected back
-	 * (to redirect URL defined in constructor), call
-	 * {@link #validateAuthorization(MiraclStatePreserver, String)} to complete
-	 * authorization with server.
-	 *
-	 * @param preserver
-	 *            Miracl preserver object for current user
-	 * @return Request URI for mpin authorization. After request redirects back,
-	 *         pass queryString to
-	 *         {@link #validateAuthorization(MiraclStatePreserver, String)} to
-	 *         complete authorization with server.
-	 */
-	public URI getAuthorizationRequestUrl(MiraclStatePreserver preserver) {
-		State state = new State();
-		Nonce nonce = new Nonce();
+        String providerInfo = null;
+        try (java.util.Scanner s = new java.util.Scanner(stream)) {
+            providerInfo = s.useDelimiter("\\A").hasNext() ? s.next() : "";
+        }
+        return providerInfo;
+    }
 
-		preserver.put(KEY_STATE, state.getValue());
-		preserver.put(KEY_NONCE, nonce.getValue());
+    /**
+     * Get {@link URI} for authorization request. After user is redirected back
+     * (to redirect URL defined in constructor), call
+     * {@link #validateAuthorization(MiraclStatePreserver, String)} to complete
+     * authorization with server.
+     *
+     * @param preserver Miracl preserver object for current user
+     * @return Request URI for mpin authorization. After request redirects back,
+     * pass queryString to
+     * {@link #validateAuthorization(MiraclStatePreserver, String)} to
+     * complete authorization with server.
+     */
+    public URI getAuthorizationRequestUrl(MiraclStatePreserver preserver) {
+        State state = new State();
+        Nonce nonce = new Nonce();
 
-		Scope scope = new Scope();
-		scope.add("openid");
-		scope.add("sub");
-		scope.add("email");
+        preserver.put(KEY_STATE, state.getValue());
+        preserver.put(KEY_NONCE, nonce.getValue());
 
-		AuthenticationRequest authenticationRequest = new AuthenticationRequest(
-				providerMetadata.getAuthorizationEndpointURI(), new ResponseType(ResponseType.Value.CODE), scope,
-				clientId, redirectUrl, state, nonce);
+        Scope scope = new Scope();
+        scope.add("openid");
+        scope.add("sub");
+        scope.add("email");
 
-		return authenticationRequest.toURI();
-	}
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(
+                providerMetadata.getAuthorizationEndpointURI(), new ResponseType(ResponseType.Value.CODE), scope,
+                clientId, redirectUrl, state, nonce);
 
-	/**
-	 * Completes authorization with server and returns access token. Access
-	 * token is saved in {@link MiraclStatePreserver preserver} so usually it is
-	 * not needed to save access token This method can block while performing
-	 * request to Miracl system
-	 *
-	 * @param preserver
-	 *            Miracl preserver object for current user
-	 * @param queryString
-	 *            query string from request on redirectUrl
-	 * @return Token
-	 * @throws MiraclClientException
-	 *             if there is problem with token request
-	 * @throws MiraclSystemException
-	 *             if failure occurred while communicating with server
-	 */
-	public String validateAuthorization(MiraclStatePreserver preserver, String queryString) {
-		URI queryUri = buildAuthenticationUri(queryString);
-		AuthenticationResponse response = parseAuthenticationResponse(queryUri);
-		boolean isStateOk;
-		String accessToken;
+        return authenticationRequest.toURI();
+    }
 
-		validateNonErrorResponse(response);
-		isStateOk = response.getState().toString().equals(preserver.get(KEY_STATE));
+    /**
+     * Completes authorization with server and returns access token. Access
+     * token is saved in {@link MiraclStatePreserver preserver} so usually it is
+     * not needed to save access token This method can block while performing
+     * request to Miracl system
+     *
+     * @param preserver   Miracl preserver object for current user
+     * @param queryString query string from request on redirectUrl
+     * @return Token
+     * @throws MiraclClientException if there is problem with token request
+     * @throws MiraclSystemException if failure occurred while communicating with server
+     */
+    public String validateAuthorization(MiraclStatePreserver preserver, String queryString) {
+        URI queryUri = buildAuthenticationUri(queryString);
+        AuthenticationResponse response = parseAuthenticationResponse(queryUri);
+        boolean isStateOk;
+        String accessToken;
 
-		if (!isStateOk) {
-			return null;
-		}
+        validateNonErrorResponse(response);
+        isStateOk = response.getState().toString().equals(preserver.get(KEY_STATE));
 
-		try {
-			accessToken = requestAccessToken(((AuthenticationSuccessResponse) response).getAuthorizationCode());
-			preserver.put(KEY_TOKEN, accessToken);
-			return accessToken;
-		} catch (ParseException | IOException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			throw new MiraclSystemException(e);
-		}
-	}
+        if (!isStateOk) {
+            return null;
+        }
 
-	protected URI buildAuthenticationUri(String queryString) {
-		return URI.create("/?" + queryString);
-	}
+        try {
+            accessToken = requestAccessToken(((AuthenticationSuccessResponse) response).getAuthorizationCode());
+            preserver.put(KEY_TOKEN, accessToken);
+            return accessToken;
+        } catch (ParseException | IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new MiraclSystemException(e);
+        }
+    }
 
-	/**
-	 * Attempt to parse an AuthenticationResponse
-	 * 
-	 * @param queryUri
-	 * @throws MiraclClientException
-	 *             If the response could not be parsed into an
-	 *             AuthenticationResponse
-	 * @return
-	 */
-	protected AuthenticationResponse parseAuthenticationResponse(URI queryUri) {
-		try {
-			return AuthenticationResponseParser.parse(queryUri);
-		} catch (ParseException e) {
-			throw new MiraclClientException(e);
-		}
-	}
+    protected URI buildAuthenticationUri(String queryString) {
+        return URI.create("/?" + queryString);
+    }
 
-	/**
-	 * @param authorizationCode
-	 *            Authorization code from authorization query
-	 * @return Access token as string
-	 * @throws IOException
-	 *             In case of network issues
-	 * @throws ParseException
-	 *             In case of incorrect answer from backend
-	 */
-	protected String requestAccessToken(AuthorizationCode authorizationCode) throws IOException, ParseException {
-		TokenRequest tokenRequest = buildTokenRequest(authorizationCode);
-		TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
-		validateNonErrorResponse(tokenResponse);
+    /**
+     * Attempt to parse an AuthenticationResponse
+     *
+     * @param queryUri
+     * @return
+     * @throws MiraclClientException If the response could not be parsed into an
+     *                               AuthenticationResponse
+     */
+    protected AuthenticationResponse parseAuthenticationResponse(URI queryUri) {
+        try {
+            return AuthenticationResponseParser.parse(queryUri);
+        } catch (ParseException e) {
+            throw new MiraclClientException(e);
+        }
+    }
 
-		OIDCTokenResponse accessTokenResponse = (OIDCTokenResponse) tokenResponse;
-		final AccessToken accessToken = accessTokenResponse.getOIDCTokens().getAccessToken();
-		return accessToken.getValue();
-	}
+    /**
+     * @param authorizationCode Authorization code from authorization query
+     * @return Access token as string
+     * @throws IOException    In case of network issues
+     * @throws ParseException In case of incorrect answer from backend
+     */
+    protected String requestAccessToken(AuthorizationCode authorizationCode) throws IOException, ParseException {
+        TokenRequest tokenRequest = buildTokenRequest(authorizationCode);
+        TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenRequest.toHTTPRequest().send());
+        validateNonErrorResponse(tokenResponse);
 
-	/**
-	 * Build a token request based on an authorization code
-	 * 
-	 * @param authorizationCode
-	     * @return
-	 */
-	protected TokenRequest buildTokenRequest(AuthorizationCode authorizationCode) {
-		return new TokenRequest(providerMetadata.getTokenEndpointURI(), new ClientSecretBasic(clientId, clientSecret),
-				new AuthorizationCodeGrant(authorizationCode, redirectUrl));
-	}
-	
-	/**
-	 * Check that a {@link Response} is not an {@link ErrorResponse},
-	 * throw a {@link MiraclClientException} if it is.
-	 * @param response The Response to validate
-	 * @throws MiraclClientException If the Response is an instance of ErrorResponse
-	 */
-	protected void validateNonErrorResponse(Response response) {
-		if (response instanceof ErrorResponse) {
-			ErrorObject error = ((ErrorResponse) response).getErrorObject();
-			throw new MiraclClientException(error);
-		}
-	}
+        OIDCTokenResponse accessTokenResponse = (OIDCTokenResponse) tokenResponse;
+        final AccessToken accessToken = accessTokenResponse.getOIDCTokens().getAccessToken();
+        return accessToken.getValue();
+    }
 
-	/**
-	 * Clears user info from {@link MiraclStatePreserver preserver}. Can be used
-	 * to refresh user data before using
-	 * {@link #getUserId(MiraclStatePreserver)} and
-	 * {@link #getEmail(MiraclStatePreserver)}
-	 *
-	 * @param preserver
-	 *            Miracl preserver object for current user
-	 * @see #clearUserInfoAndSession(MiraclStatePreserver) to remove session
-	 *      info
-	 */
-	public void clearUserInfo(MiraclStatePreserver preserver) {
-		preserver.remove(KEY_USERINFO);
-	}
+    /**
+     * Build a token request based on an authorization code
+     *
+     * @param authorizationCode
+     * @return
+     */
+    protected TokenRequest buildTokenRequest(AuthorizationCode authorizationCode) {
+        return new TokenRequest(providerMetadata.getTokenEndpointURI(), new ClientSecretBasic(clientId, clientSecret),
+                new AuthorizationCodeGrant(authorizationCode, redirectUrl));
+    }
 
-	/**
-	 * Clears user and session info from {@link MiraclStatePreserver preserver}
-	 *
-	 * @param preserver
-	 *            Miracl preserver object for current user
-	 * @see #clearUserInfo(MiraclStatePreserver) to remove only user info
-	 */
-	public void clearUserInfoAndSession(MiraclStatePreserver preserver) {
-		clearUserInfo(preserver);
-		preserver.remove(KEY_TOKEN);
-	}
+    /**
+     * Check that a {@link Response} is not an {@link ErrorResponse},
+     * throw a {@link MiraclClientException} if it is.
+     *
+     * @param response The Response to validate
+     * @throws MiraclClientException If the Response is an instance of ErrorResponse
+     */
+    protected void validateNonErrorResponse(Response response) {
+        if (response instanceof ErrorResponse) {
+            ErrorObject error = ((ErrorResponse) response).getErrorObject();
+            throw new MiraclClientException(error);
+        }
+    }
 
-	private UserInfo getUserInfo(MiraclStatePreserver preserver) {
-		if (preserver.get(KEY_TOKEN) == null) {
-			throw new MiraclClientException(MiraclMessages.USER_NOT_AUTHORIZED);
-		}
+    /**
+     * Clears user info from {@link MiraclStatePreserver preserver}. Can be used
+     * to refresh user data before using
+     * {@link #getUserId(MiraclStatePreserver)} and
+     * {@link #getEmail(MiraclStatePreserver)}
+     *
+     * @param preserver Miracl preserver object for current user
+     * @see #clearUserInfoAndSession(MiraclStatePreserver) to remove session
+     * info
+     */
+    public void clearUserInfo(MiraclStatePreserver preserver) {
+        preserver.remove(KEY_USERINFO);
+    }
 
-		if (preserver.get(KEY_USERINFO) != null) {
-			final UserInfo userInfo;
-			try {
-				userInfo = UserInfo.parse(preserver.get(KEY_USERINFO));
-				return userInfo;
-			} catch (ParseException e) {
-				// If problems with userinfo parsing, remove it and continue
-				// with obtaining new userinfo
-				preserver.remove(KEY_USERINFO);
-			}
-		}
+    /**
+     * Clears user and session info from {@link MiraclStatePreserver preserver}
+     *
+     * @param preserver Miracl preserver object for current user
+     * @see #clearUserInfo(MiraclStatePreserver) to remove only user info
+     */
+    public void clearUserInfoAndSession(MiraclStatePreserver preserver) {
+        clearUserInfo(preserver);
+        preserver.remove(KEY_TOKEN);
+    }
 
-		try {
-			UserInfo userInfo = requestUserInfo(preserver.get(KEY_TOKEN));
-			preserver.put(KEY_USERINFO, userInfo.toJSONObject().toJSONString());
-			return userInfo;
-		} catch (SerializeException | IOException | ParseException e) {
-			throw new MiraclSystemException(e);
-		}
-	}
+    private UserInfo getUserInfo(MiraclStatePreserver preserver) {
+        if (preserver.get(KEY_TOKEN) == null) {
+            throw new MiraclClientException(MiraclMessages.USER_NOT_AUTHORIZED);
+        }
 
-	/**
-	 * @param token
-	 *            Auth token (used in Bearer access header)
-	 * @return User info
-	 * @throws IOException
-	 *             In case of network issues
-	 * @throws ParseException
-	 *             In case of incorrect answer from backend
-	 */
-	protected UserInfo requestUserInfo(String token) throws IOException, ParseException {
-		final BearerAccessToken accessToken = new BearerAccessToken(token);
-		UserInfoRequest userInfoReq = new UserInfoRequest(providerMetadata.getUserInfoEndpointURI(), accessToken);
-		UserInfoResponse userInfoResponse = doUserInfoRequest(userInfoReq);
-		validateNonErrorResponse(userInfoResponse);
+        if (preserver.get(KEY_USERINFO) != null) {
+            final UserInfo userInfo;
+            try {
+                userInfo = UserInfo.parse(preserver.get(KEY_USERINFO));
+                return userInfo;
+            } catch (ParseException e) {
+                // If problems with userinfo parsing, remove it and continue
+                // with obtaining new userinfo
+                preserver.remove(KEY_USERINFO);
+            }
+        }
 
-		UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
-		return successResponse.getUserInfo();
-	}
+        try {
+            UserInfo userInfo = requestUserInfo(preserver.get(KEY_TOKEN));
+            preserver.put(KEY_USERINFO, userInfo.toJSONObject().toJSONString());
+            return userInfo;
+        } catch (SerializeException | IOException | ParseException e) {
+            throw new MiraclSystemException(e);
+        }
+    }
 
-	/**
-	 * Perform an HTTP request to retrieve user info.
-	 * 
-	 * @param request
-	 *            Request to send
-	 * @return A user info response
-	 * @throws IOException
-	 *             If an HTTP request could not be made
-	 * @throws ParseException
-	 *             If the response could not be parsed into a UserInfoResponse
-	 */
-	protected UserInfoResponse doUserInfoRequest(UserInfoRequest request) throws IOException, ParseException {
-		HTTPResponse httpResponse = request.toHTTPRequest().send();
-		return UserInfoResponse.parse(httpResponse);
-	}
+    /**
+     * @param token Auth token (used in Bearer access header)
+     * @return User info
+     * @throws IOException    In case of network issues
+     * @throws ParseException In case of incorrect answer from backend
+     */
+    protected UserInfo requestUserInfo(String token) throws IOException, ParseException {
+        final BearerAccessToken accessToken = new BearerAccessToken(token);
+        UserInfoRequest userInfoReq = new UserInfoRequest(providerMetadata.getUserInfoEndpointURI(), accessToken);
+        UserInfoResponse userInfoResponse = doUserInfoRequest(userInfoReq);
+        validateNonErrorResponse(userInfoResponse);
 
-	/**
-	 * Checks if token is in {@link MiraclStatePreserver preserver} and user
-	 * data is accessible (by request or in cache). This method can block while
-	 * performing request to Miracl system
-	 *
-	 * @param preserver
-	 *            Miracl preserver object for current user
-	 * @return if user associated with {@link MiraclStatePreserver preserver} is
-	 *         authorized
-	 */
-	public boolean isAuthorized(MiraclStatePreserver preserver) {
-		try {
-			return getUserInfo(preserver) != null;
-		} catch (MiraclClientException e) {
-			LOGGER.log(Level.FINER, e.getMessage(), e);
-			return false;
-		}
-	}
+        UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
+        return successResponse.getUserInfo();
+    }
 
-	/**
-	 * Get user e-mail. This method can block while performing request to Miracl
-	 * system
-	 *
-	 * @param preserver
-	 *            Miracl preserver object for current user
-	 * @return User e-mail
-	 * @throws MiraclClientException
-	 *             if there is problem with request
-	 * @throws MiraclSystemException
-	 *             if failure occurred while communicating with server
-	 * @see #getUserId(MiraclStatePreserver) for requesting user ID
-	 */
-	public String getEmail(MiraclStatePreserver preserver) {
-		final UserInfo userInfo = getUserInfo(preserver);
-		if (userInfo == null) {
-			return null;
-		}
+    /**
+     * Perform an HTTP request to retrieve user info.
+     *
+     * @param request Request to send
+     * @return A user info response
+     * @throws IOException    If an HTTP request could not be made
+     * @throws ParseException If the response could not be parsed into a UserInfoResponse
+     */
+    protected UserInfoResponse doUserInfoRequest(UserInfoRequest request) throws IOException, ParseException {
+        HTTPResponse httpResponse = request.toHTTPRequest().send();
+        return UserInfoResponse.parse(httpResponse);
+    }
 
-		final String email = userInfo.getStringClaim("email");
-		return email == null ? "" : email;
-	}
+    /**
+     * Checks if token is in {@link MiraclStatePreserver preserver} and user
+     * data is accessible (by request or in cache). This method can block while
+     * performing request to Miracl system
+     *
+     * @param preserver Miracl preserver object for current user
+     * @return if user associated with {@link MiraclStatePreserver preserver} is
+     * authorized
+     */
+    public boolean isAuthorized(MiraclStatePreserver preserver) {
+        try {
+            return getUserInfo(preserver) != null;
+        } catch (MiraclClientException e) {
+            LOGGER.log(Level.FINER, e.getMessage(), e);
+            return false;
+        }
+    }
 
-	/**
-	 * Get user id. This method can block while performing request to Miracl
-	 * system
-	 *
-	 * @param preserver
-	 *            Miracl preserver object for current user
-	 * @return User id
-	 * @throws MiraclClientException
-	 *             if there is problem with request
-	 * @throws MiraclSystemException
-	 *             if failure occurred while communicating with server
-	 * @see #getEmail(MiraclStatePreserver) for requesting user e-mail
-	 */
-	public String getUserId(MiraclStatePreserver preserver) {
-		final UserInfo userInfo = getUserInfo(preserver);
-		if (userInfo == null) {
-			return null;
-		}
+    /**
+     * Get user e-mail. This method can block while performing request to Miracl
+     * system
+     *
+     * @param preserver Miracl preserver object for current user
+     * @return User e-mail
+     * @throws MiraclClientException if there is problem with request
+     * @throws MiraclSystemException if failure occurred while communicating with server
+     * @see #getUserId(MiraclStatePreserver) for requesting user ID
+     */
+    public String getEmail(MiraclStatePreserver preserver) {
+        final UserInfo userInfo = getUserInfo(preserver);
+        if (userInfo == null) {
+            return null;
+        }
 
-		final String sub = userInfo.getStringClaim("sub");
-		return sub == null ? "" : sub;
-	}
+        final String email = userInfo.getStringClaim("email");
+        return email == null ? "" : email;
+    }
+
+    /**
+     * Get user id. This method can block while performing request to Miracl
+     * system
+     *
+     * @param preserver Miracl preserver object for current user
+     * @return User id
+     * @throws MiraclClientException if there is problem with request
+     * @throws MiraclSystemException if failure occurred while communicating with server
+     * @see #getEmail(MiraclStatePreserver) for requesting user e-mail
+     */
+    public String getUserId(MiraclStatePreserver preserver) {
+        final UserInfo userInfo = getUserInfo(preserver);
+        if (userInfo == null) {
+            return null;
+        }
+
+        final String sub = userInfo.getStringClaim("sub");
+        return sub == null ? "" : sub;
+    }
 
     /**
      * Extracts the required data for an identity activation on MIRACL trust, based on the data in the JWT supplied during push pluggable verification.
-     * @param token A valid JWT.
+     *
+     * @param requestBody the HTTP Request body
      * @return
      */
-	public IdentityActivationModel getIdentityActivationModel(String token, String signingAlgorithm) {
-        JWTClaimsSet tokenSet = extractClaims(token, signingAlgorithm);
-		JSONObject eventsClaim = (JSONObject) tokenSet.getClaim("events");
-		if(eventsClaim == null) {
-			throw new MiraclClientException("\"events\" key not found in activation JWT");
-		}
-		Object newUser = eventsClaim.get("newUser");
-		if(newUser == null) {
-			throw new MiraclClientException("\"newUser\" key not found in activation JWT");
-		}
-		String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH);
-		String activationKey = ((JSONObject) newUser).getAsString(IdentityActivationModel.ACTIVATION_KEY);
-		String subject = ((JSONObject) newUser).getAsString(IdentityActivationModel.USER_ID_KEY_PUSH);
-		return new IdentityActivationModel(mpinIdHash, activationKey, subject);
-	}
+    public IdentityActivationModel getIdentityActivationModelForRequest(String requestBody) {
+        JsonObject tokenBody = Json.parse(requestBody).asObject();
+
+        String newUserToken = tokenBody.get(PLUGGABLE_VERIFICATION_PUSH_REQUEST_NEW_USER_TOKEN_KEY).asString();
+        String signingAlgorithm;
+        try {
+            signingAlgorithm = getJWTSigningAlgorithm(newUserToken);
+        } catch (MiraclClientException ex) {
+            LOGGER.log(Level.SEVERE, "Unable to get the JSON Web Token signing algorithm.", ex);
+            throw ex;
+        }
+
+        if (tokenBody == null) {
+            LOGGER.log(Level.SEVERE, String.format("Unable to extract a JSON object from the request body %s.", requestBody));
+            throw new MiraclClientException("Unable to extract a JSON object from the request body.");
+        }
+        if(newUserToken == ""){
+            LOGGER.log(Level.SEVERE, String.format("Unable to extract a new user token from the request body %s.", requestBody));
+            throw new MiraclClientException("Unable to extract a new user token from the request body.");
+        }
+        if (!validatePushToken(newUserToken, signingAlgorithm)) {
+            LOGGER.log(Level.SEVERE, String.format("Invalid push token in the request body: %s.", requestBody));
+            throw new MiraclClientException("Invalid push token in the request body.");
+        }
+        JWTClaimsSet tokenSet = extractClaims(newUserToken, signingAlgorithm);
+        JSONObject eventsClaim = (JSONObject) tokenSet.getClaim("events");
+        if (eventsClaim == null) {
+            throw new MiraclClientException("\"events\" key not found in activation JWT");
+        }
+        Object newUser = eventsClaim.get("newUser");
+        if (newUser == null) {
+            throw new MiraclClientException("\"newUser\" key not found in activation JWT");
+        }
+        String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH);
+        String activationKey = ((JSONObject) newUser).getAsString(IdentityActivationModel.ACTIVATION_KEY);
+        String subject = ((JSONObject) newUser).getAsString(IdentityActivationModel.USER_ID_KEY_PUSH);
+        return new IdentityActivationModel(mpinIdHash, activationKey, subject);
+    }
 
     /**
      * Validates a JWT used for pluggable validation
-     * @param jwt A calid JSON Web Token.
+     *
+     * @param jwt       A calid JSON Web Token.
      * @param algorithm The expected signing algorithm.
      * @return
      */
@@ -482,22 +475,20 @@ public class MiraclClient {
     }
 
     /**
-     *
-     * @param jwt A valid JSON Web Token.
-     *          @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
+     * @param jwt       A valid JSON Web Token.
      * @param algorithm The expected signing algorithm
      * @return {@link JWTClaimsSet} A set of claims contained in the JSON Web Token
+     * @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
      */
     private JWTClaimsSet extractClaims(String jwt, String algorithm) {
         return extractClaims(jwt, JWSAlgorithm.parse(algorithm));
     }
 
     /**
-     *
-     * @param jwt A valid JSON Web Token.
-     *          @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
+     * @param jwt       A valid JSON Web Token.
      * @param algorithm The expected signing algorithm
      * @return {@link JWTClaimsSet} A set of claims contained in the JSON Web Token
+     * @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
      */
     private JWTClaimsSet extractClaims(String jwt, JWSAlgorithm algorithm) {
 
@@ -512,20 +503,21 @@ public class MiraclClient {
 
     /**
      * Extracts signing algorithm from signed JWT header.
+     *
      * @param jwt The full JWT
      * @return {@link JWSAlgorithm}
      * @throws MiraclClientException
      */
     public String getJWTSigningAlgorithm(String jwt) throws MiraclClientException {
         String[] parts = jwt.split("\\.");
-        if(parts.length != 3) {
+        if (parts.length != 3) {
             throw new MiraclClientException("Invalid JWT");
         }
         JSONObject headerJSON = (JSONObject) JSONValue.parse(Base64.getDecoder().decode(parts[0]));
-        if(headerJSON == null) {
+        if (headerJSON == null) {
             throw new MiraclClientException("Unable to parse JWT header");
         }
-        if(!headerJSON.containsKey("alg")) {
+        if (!headerJSON.containsKey("alg")) {
             throw new MiraclClientException("Signing algorithm not specified in JWT header");
         }
         return JWSAlgorithm.parse(headerJSON.getAsString(ALG_HEADER_KEY)).getName();
@@ -533,15 +525,14 @@ public class MiraclClient {
 
     /**
      * Activates an identity that is a subject to pluggable verification
-     * @param identityActivationModel A {@link IdentityActivationModel} instance with valid client activation parameters.
-     * @param activationUrl The URL of the MIRACL Trust platform activation endpoint
+     *  @param identityActivationModel A {@link IdentityActivationModel} instance with valid client activation parameters.
+     *
      */
-    public void activateIdentity(IdentityActivationModel identityActivationModel, String activationUrl) {
-
+    public void activateIdentity(IdentityActivationModel identityActivationModel) {
 
         try {
             HTTPRequest activationRequest = new HTTPRequest(HTTPRequest.Method.POST,
-                    new URL(activationUrl)
+                    new URL(getClientActivationEndpointURL())
             );
             activationRequest.setAuthorization(getClientCredentials());
             activationRequest.setContentType(PLUGGABLE_VERIFICATION_ACTIVATION_REQUEST_HTTP_CONTENT_TYPE);
@@ -568,6 +559,7 @@ public class MiraclClient {
 
     /**
      * Activates an identity that is a subject to pluggable verification
+     *
      * @param subject A unique identity identifier
      * @param pullUrl The URL of the MIRACL Trust pluggable verification pull endpoint
      */
@@ -597,16 +589,15 @@ public class MiraclClient {
             //convert second based epoch value to milliseconds
             Date expirationTime = new Date(responseBody.getAsNumber(IdentityActivationModel.EXPIRATION_TIME).longValue() * 1000);
 
-            if(mpinIdHash==null || mpinIdHash.equals("")) {
+            if (mpinIdHash == null || mpinIdHash.equals("")) {
                 throw new MiraclClientException("MPin ID hash not been found in the pull verification request.");
             }
 
-            if(activationKey==null || activationKey.equals("")) {
+            if (activationKey == null || activationKey.equals("")) {
                 throw new MiraclClientException("Activation key not been found in the pull verification request.");
             }
 
-            if(expirationTime.before(new Date()))
-            {
+            if (expirationTime.before(new Date())) {
                 throw new MiraclClientException("Pull pluggable verification request has expired.");
             }
             return new IdentityActivationModel(mpinIdHash, activationKey, subject);
@@ -629,11 +620,12 @@ public class MiraclClient {
 
     /**
      * Creates a client-id:client-secret base64 encoded client credentials string.
+     *
      * @return a client-id:client-secret base64 encoded client credentials string.
      */
     private String getClientCredentials() {
-	    return String.format("Basic %s",
-                Base64.getEncoder().encodeToString(String.format("%s:%s",clientId,clientSecret.getValue()).getBytes())
+        return String.format("Basic %s",
+                Base64.getEncoder().encodeToString(String.format("%s:%s", clientId, clientSecret.getValue()).getBytes())
         );
     }
 }

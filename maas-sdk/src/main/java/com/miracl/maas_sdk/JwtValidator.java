@@ -22,123 +22,116 @@ import net.minidev.json.JSONObject;
 
 /**
  * Tools related to JWT signature validation and working with claims.
- *
  */
 public class JwtValidator {
 
-	private static final String KEY_SOURCE_URL = MiraclConfig.ISSUER + MiraclConfig.CERTS_API_ENDPOINT;
+    private static final String KEY_SOURCE_URL = MiraclConfig.ISSUER + MiraclConfig.CERTS_API_ENDPOINT;
     private JWSAlgorithm algorithm;
+    private JWKSource<SecurityContext> jwkSource;
     private URL keySourceUrl;
 
-	public JwtValidator(JWSAlgorithm algorithm, URL keySourceUrl) {
-		this.algorithm = algorithm;
-		this.keySourceUrl = keySourceUrl;
-	}
+    public JwtValidator(JWSAlgorithm algorithm, URL keySourceUrl) {
+        this.algorithm = algorithm;
+        this.keySourceUrl = keySourceUrl;
+    }
 
-	public JwtValidator(JWSAlgorithm algorithm, String keySourceUrl) {
-		this.algorithm = algorithm;
+    public JwtValidator(String algorithm, JWKSource<SecurityContext> jwkSource) {
+        this.algorithm = JWSAlgorithm.parse(algorithm);
+        this.jwkSource = jwkSource;
+    }
 
-		try {
-			this.keySourceUrl = new URL(keySourceUrl);
-		} catch (MalformedURLException e) {
-			throw new MiraclClientException(e);
-		}
-	}
+    public JwtValidator(JWSAlgorithm algorithm, String keySourceUrl) {
+        this.algorithm = algorithm;
 
-	public JwtValidator(JWSAlgorithm algorithm) {
-		this(algorithm, KEY_SOURCE_URL);
-	}
+        try {
+            this.keySourceUrl = new URL(keySourceUrl);
+        } catch (MalformedURLException e) {
+            throw new MiraclClientException(e);
+        }
+    }
 
-	public JwtValidator(String algorithm) {
-		this(getJWSAlgorithm(algorithm));
-	}
+    public JwtValidator(JWSAlgorithm algorithm) {
+        this(algorithm, KEY_SOURCE_URL);
+    }
 
+    public JwtValidator(String algorithm) {
+        this(getJWSAlgorithm(algorithm));
+    }
 
-	/**
-	 * Create a JWT processor that can be used to verify tokens and extract
-	 * claims.
-	 * 
-	 * @return A DefaultJWTProcessor
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 */
-	public ConfigurableJWTProcessor<SecurityContext> buildJwtProcessor(JWSAlgorithm algorithm) {
-		ConfigurableJWTProcessor<SecurityContext> processor;
-		JWKSource<SecurityContext> keySource;
-		JWSKeySelector<SecurityContext> keySelector;
+    /**
+     * Create a JWT processor that can be used to verify tokens and extract
+     * claims.
+     *
+     * @return A DefaultJWTProcessor
+     * @throws MiraclClientException When the remote JWK URL is not valid
+     */
+    ConfigurableJWTProcessor<SecurityContext> buildJwtProcessor(JWSAlgorithm algorithm) {
+        ConfigurableJWTProcessor<SecurityContext> processor;
+        JWKSource<SecurityContext> keySource;
+        JWSKeySelector<SecurityContext> keySelector;
 
-		processor = new DefaultJWTProcessor<>();
-		keySource = new RemoteJWKSet<>(keySourceUrl);
-		keySelector = new JWSVerificationKeySelector<>(algorithm, keySource);
-		processor.setJWSKeySelector(keySelector);
-		processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<SecurityContext>() {
-			@Override
-			public void verify(JWTClaimsSet claimsSet) throws BadJWTException {
-				super.verify(claimsSet);
-				Date expirationTime = claimsSet.getExpirationTime();
-				if (expirationTime == null) {
-					throw new BadJWTException("Missing token expiration claim");
-				}
+        processor = new DefaultJWTProcessor<>();
+        keySource = new RemoteJWKSet<>(keySourceUrl);
+        keySelector = new JWSVerificationKeySelector<>(algorithm, keySource);
+        processor.setJWSKeySelector(keySelector);
+        processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<SecurityContext>() {
+            @Override
+            public void verify(JWTClaimsSet claimsSet) throws BadJWTException {
+                super.verify(claimsSet);
+                Date expirationTime = claimsSet.getExpirationTime();
+                if (expirationTime == null) {
+                    throw new BadJWTException("Missing token expiration claim");
+                }
 
-				if (!MiraclConfig.ISSUER.equals(claimsSet.getIssuer())) {
-					throw new BadJWTException("Token issuer not accepted");
-				}
-			}
-		});
+                if (!MiraclConfig.ISSUER.equals(claimsSet.getIssuer())) {
+                    throw new BadJWTException("Token issuer not accepted");
+                }
+            }
+        });
 
-		return processor;
-	}
+        return processor;
+    }
 
-	/**
-	 * Extracts and returns a JWT's claims.
-	 * 
-	 * @param token
-	 *            JSON Web Token to validate
-	 * @return The JWT's claims
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 * @throws MiraclSystemException
-	 *             When the token could not be validated
-	 */
-	public JWTClaimsSet extractClaims(String token) throws ParseException, JOSEException, BadJOSEException {
-		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = buildJwtProcessor(algorithm);
-		return jwtProcessor.process(token, null);
-	}
+    /**
+     * Extracts and returns a JWT's claims.
+     *
+     * @param token JSON Web Token to validate
+     * @return The JWT's claims
+     * @throws MiraclClientException When the remote JWK URL is not valid
+     * @throws MiraclSystemException When the token could not be validated
+     */
+    public JWTClaimsSet extractClaims(String token) throws ParseException, JOSEException, BadJOSEException {
+        ConfigurableJWTProcessor<SecurityContext> jwtProcessor = buildJwtProcessor(algorithm);
+        return jwtProcessor.process(token, null);
+    }
 
-	/**
-	 * Attempts to validate a JWT, throwing a MiraclSystemException if it
-	 * cannot.
-	 * 
-	 * @param token
-	 *            JSON Web Token to validate
-	 * @throws MiraclClientException
-	 *             When the remote JWK URL is not valid
-	 * @throws MiraclSystemException
-	 *             When the token could not be validated
-	 */
-	public boolean validateToken(String token) {
+    /**
+     * Attempts to validate a JWT, throwing a MiraclSystemException if it
+     * cannot.
+     *
+     * @param token JSON Web Token to validate
+     * @throws MiraclClientException When the remote JWK URL is not valid
+     * @throws MiraclSystemException When the token could not be validated
+     */
+    public boolean validateToken(String token) {
         try {
             extractClaims(token);
-			return true;
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (JOSEException e) {
-            e.printStackTrace();
-        } catch (BadJOSEException e) {
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
         }
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * Get a JWSAlgorithm by its name.
-	 * 
-	 * @param name
-	 * @return
-	 */
-	public static JWSAlgorithm getJWSAlgorithm(String name) {
-		return new JWSAlgorithm(name);
-	}
+    /**
+     * Get a JWSAlgorithm by its name.
+     *
+     * @param name
+     * @return
+     */
+    public static JWSAlgorithm getJWSAlgorithm(String name) {
+        return new JWSAlgorithm(name);
+    }
 
     public boolean validatePushToken(String newUserToken) {
         try {
@@ -160,7 +153,11 @@ public class JwtValidator {
         JWKSource<SecurityContext> keySource;
         JWSKeySelector<SecurityContext> keySelector;
         processor = new DefaultJWTProcessor<>();
-        keySource = new RemoteJWKSet<>(keySourceUrl);
+        if(jwkSource == null) {
+            keySource = new RemoteJWKSet<>(keySourceUrl);
+        } else {
+            keySource = jwkSource;
+        }
         keySelector = new JWSVerificationKeySelector<>(algorithm, keySource);
         processor.setJWSKeySelector(keySelector);
         processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<SecurityContext>() {
@@ -171,21 +168,21 @@ public class JwtValidator {
                     throw new BadJWTException("Missing token expiration claim");
                 }
 
-                JSONObject eventsClaim = (JSONObject)claimsSet.getClaim("events");
+                JSONObject eventsClaim = (JSONObject) claimsSet.getClaim("events");
 
-                if(eventsClaim == null) {
+                if (eventsClaim == null) {
                     throw new MiraclSystemException("\"events\" key not found in activation JWT");
                 }
                 Object newUser = eventsClaim.get("newUser");
-                if(newUser == null) {
+                if (newUser == null) {
                     throw new MiraclSystemException("\"newUser\" key not found in activation JWT");
                 }
                 String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH);
-                if(mpinIdHash == null || mpinIdHash.equals("")) {
+                if (mpinIdHash == null || mpinIdHash.equals("")) {
                     throw new MiraclSystemException(String.format("\"%s\" key not found in activation JWT", IdentityActivationModel.MPIN_ID_HASH_KEY));
                 }
                 String activationKey = ((JSONObject) newUser).getAsString(IdentityActivationModel.ACTIVATION_KEY);
-                if(activationKey == null || activationKey.equals("")) {
+                if (activationKey == null || activationKey.equals("")) {
                     throw new MiraclSystemException(String.format("\"%s\" key not found in activation JWT", IdentityActivationModel.ACTIVATION_KEY));
                 }
                 if (!MiraclConfig.ISSUER.equals(claimsSet.getIssuer())) {

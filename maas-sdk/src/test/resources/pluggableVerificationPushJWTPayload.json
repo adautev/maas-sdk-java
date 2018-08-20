@@ -1,0 +1,16 @@
+{
+  "sub": "userid",
+  "iss": "%s",
+  "aud": "customer-id",
+  "iat": %s,
+  "exp": %s,
+  "events": {
+    "newUser": {
+      "userID": "user-id",
+      "deviceName": "device-name",
+      "hashMPinID": "hash-mpin-id",
+      "activateKey": "activate-key",
+      "expireTime": %s
+    }
+  }
+}
