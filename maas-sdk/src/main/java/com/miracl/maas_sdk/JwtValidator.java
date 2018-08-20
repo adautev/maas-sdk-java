@@ -138,14 +138,9 @@ public class JwtValidator {
             ConfigurableJWTProcessor<SecurityContext> jwtProcessor = buildPushJwtProcessor();
             jwtProcessor.process(newUserToken, null);
             return true;
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (JOSEException e) {
-            e.printStackTrace();
-        } catch (BadJOSEException e) {
-            e.printStackTrace();
+        } catch (ParseException | JOSEException | BadJOSEException e) {
+            return false;
         }
-        return false;
     }
 
     private ConfigurableJWTProcessor<SecurityContext> buildPushJwtProcessor() {
