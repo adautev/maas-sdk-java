@@ -277,7 +277,7 @@ public class MiraclClientTest {
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
     }
 
-    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_EXECUTE_POST_REQUEST)
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST)
     public void testActivateIdentity_missingEndpoint() {
         MiraclConfig.setIssuer(String.format("http://dummy:%s", server.getPort()));
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));

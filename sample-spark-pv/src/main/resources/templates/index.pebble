@@ -100,7 +100,7 @@
     {% endif %}
     <!--Please refer to your distributor-specific documentation to find the correct url for the mpad.js script src-->
     {% if retry or not authorized %}
-        <script src="<<Insert correct mpad url here>>" data-authurl="{{ authURL }}" data-element="btmpin"></script>
+        <script src="http://mcl.cdn.qa.miracl.net/mpad/mpad.js" data-authurl="{{ authURL }}" data-element="btmpin"></script>
     {% endif %}
 </div>
 </body>
