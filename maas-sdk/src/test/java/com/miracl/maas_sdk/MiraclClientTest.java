@@ -1,6 +1,7 @@
 package com.miracl.maas_sdk;
 
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
@@ -17,6 +18,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,18 +33,16 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.*;
 import java.util.function.Consumer;
 
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
-import static com.xebialabs.restito.semantics.Action.header;
-import static com.xebialabs.restito.semantics.Action.status;
-import static com.xebialabs.restito.semantics.Action.stringContent;
+import static com.xebialabs.restito.semantics.Action.*;
 import static com.xebialabs.restito.semantics.Condition.endsWithUri;
 
 public class MiraclClientTest {
 
+    public static final String SAMPLE_JWS_KID = "1234";
     private static final String TEST_URL = "http://example.com";
 
     MiraclClient client;
@@ -61,6 +63,7 @@ public class MiraclClientTest {
         client = new MiraclClientNoNetworkMock("MOCK_CLIENT", "MOCK_SECRET", "MOCK_URL");
         preserver = new MiraclMapStatePreserver(new HashMap<>());
         server = new StubServer().run();
+        MiraclConfig.setIssuer(MiraclConfig.DEFAULT_ISSUER);
     }
 
     @AfterMethod
@@ -235,11 +238,11 @@ public class MiraclClientTest {
 
     @Test
     public void testGetJWTSigningAlgorithm() {
-        String jwt = generateDummySignedJWT(JWSAlgorithm.RS256);
+        String jwt = generateDummySignedJWT(JWSAlgorithm.RS256, TEST_URL);
         Assert.assertEquals(JWSAlgorithm.RS256.toString(), client.getJWTSigningAlgorithm(jwt));
-        jwt = generateDummySignedJWT(JWSAlgorithm.RS384);
+        jwt = generateDummySignedJWT(JWSAlgorithm.RS384, null);
         Assert.assertEquals(JWSAlgorithm.RS384.toString(), client.getJWTSigningAlgorithm(jwt));
-        jwt = generateDummySignedJWT(JWSAlgorithm.RS512);
+        jwt = generateDummySignedJWT(JWSAlgorithm.RS512, null);
         Assert.assertEquals(JWSAlgorithm.RS512.toString(), client.getJWTSigningAlgorithm(jwt));
     }
 
@@ -273,8 +276,8 @@ public class MiraclClientTest {
                         IdentityActivationModel.USER_ID_KEY,
                         IdentityActivationModel.EXPIRATION_TIME,
                         new Date(new Date().getTime() + 100000).getTime())));
-
-        client.pullVerification("dummy", "http://localhost:" + server.getPort() + MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
+        MiraclConfig.setIssuer(String.format("http://localhost:%s", server.getPort()));
+        client.pullVerification("dummy");
     }
 
     @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = ".+?expired.+")
@@ -287,8 +290,8 @@ public class MiraclClientTest {
                         IdentityActivationModel.USER_ID_KEY,
                         IdentityActivationModel.EXPIRATION_TIME,
                         new Date(new Date().getTime()).getTime() / 1000)));
-
-        client.pullVerification("dummy", "http://localhost:" + server.getPort() + MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
+        MiraclConfig.setIssuer(String.format("http://localhost:%s", server.getPort()));
+        client.pullVerification("dummy");
     }
 
     @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = ".+?hash.+")
@@ -301,8 +304,8 @@ public class MiraclClientTest {
                         IdentityActivationModel.USER_ID_KEY,
                         IdentityActivationModel.EXPIRATION_TIME,
                         new Date(new Date().getTime() + 100000).getTime())));
-
-        client.pullVerification("dummy", "http://localhost:" + server.getPort() + MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
+        MiraclConfig.setIssuer(String.format("http://localhost:%s", server.getPort()));
+        client.pullVerification("dummy");
     }
 
     @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = "Activation.+?")
@@ -315,15 +318,26 @@ public class MiraclClientTest {
                         IdentityActivationModel.USER_ID_KEY,
                         IdentityActivationModel.EXPIRATION_TIME,
                         new Date(new Date().getTime() + 100000).getTime())));
-
-        client.pullVerification("dummy", "http://localhost:" + server.getPort() + MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT);
+        MiraclConfig.setIssuer(String.format("http://localhost:%s", server.getPort()));
+        client.pullVerification("dummy");
     }
 
     @Test(expectedExceptions = MiraclClientException.class)
-    public void testErroneous_IdentityActivation() {
+    public void testIdentityActivation_ErroneousResponse() {
         whenHttp(server)
                 .match(endsWithUri(MiraclConfig.PLUGGABLE_VERIFICATION_ACTIVATION_ENDPOINT))
                 .then(status(HttpStatus.NOT_FOUND_404));
+        client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST)
+    public void testIdentityActivation_noActivationEndpoint() {
+        client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST)
+    public void testIdentityActivation_erroneousActivationURL() {
+        ((MiraclClientNoNetworkMock)client).setErroneusGetClientActivationEndpointURL(true);
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
     }
 
@@ -345,6 +359,38 @@ public class MiraclClientTest {
         });
     }
 
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT)
+    public void testgetIdentityActivationModelForRequest_noSigningAlgorithm() throws Exception {
+        String jwt = generateDummyNotSignedJWT();
+        String newUserToken = String.format("{\"new_user_token\" : \"%s\"}", jwt);
+        client.getIdentityActivationModelForRequest(newUserToken);
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_JSON_OBJECT_FROM_REQUEST_BODY)
+    public void testgetIdentityActivationModelForRequest_noValidRequest() throws Exception {
+        client.getIdentityActivationModelForRequest("dummy");
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_NEW_USER_TOKEN_FROM_REQUEST_BODY)
+    public void testgetIdentityActivationModelForRequest_noNewUserToken() throws Exception {
+        client.getIdentityActivationModelForRequest("{\"key\": \"value\"}");
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_NEW_USER_TOKEN_FROM_REQUEST_BODY)
+    public void testgetIdentityActivationModelForRequest_emptyUserToken() throws Exception {
+        client.getIdentityActivationModelForRequest("{\"new_user_token\": \"\"}");
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT)
+    public void testgetIdentityActivationModelForRequest_invalidUserToken() throws Exception {
+        client.getIdentityActivationModelForRequest("{\"new_user_token\": \"dummy\"}");
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT)
+    public void testgetIdentityActivationModelForRequest_successful() throws Exception {
+        client.getIdentityActivationModelForRequest("{\"new_user_token\": \"dummy\"}");
+    }
+
     private void createFile(String filename, List<String> lines, Consumer<URL> consumer) throws Exception {
         Path file = Paths.get(filename);
         Files.write(file, lines, Charset.forName("UTF-8"));
@@ -364,8 +410,7 @@ public class MiraclClientTest {
         return jwt.serialize();
     }
 
-
-    private String generateDummySignedJWT(JWSAlgorithm algorithm) {
+    private String generateDummySignedJWT(JWSAlgorithm algorithm, String payload) {
         KeyPairGenerator keyGenerator = null;
         try {
             keyGenerator = KeyPairGenerator.getInstance("RSA");
@@ -376,14 +421,13 @@ public class MiraclClientTest {
         keyGenerator.initialize(1024);
 
         KeyPair kp = keyGenerator.genKeyPair();
-        RSAPublicKey publicKey = (RSAPublicKey) kp.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) kp.getPrivate();
 
         JWSSigner signer = new RSASSASigner(privateKey);
 
         JWSObject jwsObject = new JWSObject(
                 new JWSHeader.Builder(algorithm).keyID("123").build(),
-                new Payload("In RSA we trust!"));
+                new Payload(payload == null ? "In RSA we trust!" : payload));
 
         try {
             jwsObject.sign(signer);
@@ -393,4 +437,31 @@ public class MiraclClientTest {
         }
         return jwsObject.serialize();
     }
+
+    private String generateValidSignedJWT(JWSAlgorithm algorithm, String key) {
+
+        byte[] decodedKey = Base64.getDecoder().decode(key);
+        try {
+            JWSSigner signer = new MACSigner(new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES"));
+            String currentDate = Long.toString(new Date(new Date().getTime()).getTime());
+            String futureDate = Long.toString(new Date(new Date().getTime() + 100000).getTime());
+            URI payloadTemplateUri = getClass().getClassLoader().getResource("pluggableVerificationPushJWTPayload.json").toURI();
+            String payloadTemplate = org.testng.reporters.Files.readFile(new File(payloadTemplateUri));
+            String payload = String.format(payloadTemplate, MiraclConfig.ISSUER, currentDate, futureDate, futureDate);
+            JWSObject jwsObject = new JWSObject(
+                    new JWSHeader.Builder(algorithm).keyID(SAMPLE_JWS_KID).build(),
+                    new Payload(payload));
+            jwsObject.sign(signer);
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        Assert.fail("Unable to sign dummy JWT.");
+        return "";
+    }
+
 }

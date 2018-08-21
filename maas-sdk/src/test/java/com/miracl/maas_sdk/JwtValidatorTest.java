@@ -70,18 +70,16 @@ public class JwtValidatorTest {
         JWKSet keySet;
         JWSKeySelector<SecurityContext> keySelector;
 
-        File file = new File(getClass().getClassLoader().getResource("jwk.json").getFile());
+        File jwkFile = new File(getClass().getClassLoader().getResource("jwk.json").getFile());
 
         try {
-            JsonObject jwkFileContent = Json.parse(IOUtils.readFileToString(file, Charset.forName("UTF-8"))).asObject();
+            JsonObject jwkFileContent = Json.parse(IOUtils.readFileToString(jwkFile, Charset.forName("UTF-8"))).asObject();
             processor = new DefaultJWTProcessor<>();
-            keySet = JWKSet.load(file);
+            keySet = JWKSet.load(jwkFile);
             keySource = new ImmutableJWKSet<>(keySet);
             keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.HS256, keySource);
             processor.setJWSKeySelector(keySelector);
 
-
-            RSAPrivateKey privateKey = null;
             validator = new JwtValidator("HS256", keySource);
             String validJWT = generateValidSignedJWT(JWSAlgorithm.HS256, jwkFileContent.get("keys").asArray().get(0).asObject().get("k").asString());
             Assert.assertTrue(validator.validatePushToken(validJWT));
@@ -178,16 +176,8 @@ public class JwtValidatorTest {
     }
 
     private String generateValidSignedJWT(JWSAlgorithm algorithm, String key) {
-        KeyPairGenerator keyGenerator = null;
-        try {
-            keyGenerator = KeyPairGenerator.getInstance("RSA");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            Assert.fail("Unable to generate RSA Key");
-        }
-        byte[] decodedKey = Base64.getDecoder().decode(key);
-        keyGenerator.initialize(1024);
 
+        byte[] decodedKey = Base64.getDecoder().decode(key);
         try {
             JWSSigner signer = new MACSigner(new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES"));
             String currentDate = Long.toString(new Date(new Date().getTime()).getTime());

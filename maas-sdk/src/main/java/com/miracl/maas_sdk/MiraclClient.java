@@ -2,6 +2,7 @@ package com.miracl.maas_sdk;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.*;
@@ -48,6 +49,7 @@ public class MiraclClient {
     private static final String PLUGGABLE_VERIFICATION_PULL_USER_ID_FIELD_KEY = "userId";
     private static final String PLUGGABLE_VERIFICATION_PUSH_REQUEST_NEW_USER_TOKEN_KEY = "new_user_token";
     private static final String ALG_HEADER_KEY = "alg";
+
 
     private final ClientID clientId;
     private final Secret clientSecret;
@@ -423,38 +425,50 @@ public class MiraclClient {
      * @return
      */
     public IdentityActivationModel getIdentityActivationModelForRequest(String requestBody) {
-        JsonObject tokenBody = Json.parse(requestBody).asObject();
+        JsonObject tokenBody = null;
+        try {
+            tokenBody = Json.parse(requestBody).asObject();
+        }  catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, String.format(MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_JSON_OBJECT_FROM_REQUEST_BODY_LOG, requestBody));
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_JSON_OBJECT_FROM_REQUEST_BODY);
+        }
 
-        String newUserToken = tokenBody.get(PLUGGABLE_VERIFICATION_PUSH_REQUEST_NEW_USER_TOKEN_KEY).asString();
+        JsonValue newUserTokenObject = tokenBody.get(PLUGGABLE_VERIFICATION_PUSH_REQUEST_NEW_USER_TOKEN_KEY);
+        if(newUserTokenObject == null){
+            LOGGER.log(Level.SEVERE, String.format(MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_NEW_USER_TOKEN_FROM_REQUEST_BODY_LOG, requestBody));
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_NEW_USER_TOKEN_FROM_REQUEST_BODY);
+        }
+
+        String newUserToken = newUserTokenObject.asString();
+        if(newUserToken.equals("")){
+            LOGGER.log(Level.SEVERE, String.format(MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_NEW_USER_TOKEN_FROM_REQUEST_BODY_LOG, requestBody));
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_EXTRACT_NEW_USER_TOKEN_FROM_REQUEST_BODY);
+        }
+
         String signingAlgorithm;
         try {
             signingAlgorithm = getJWTSigningAlgorithm(newUserToken);
         } catch (MiraclClientException ex) {
-            LOGGER.log(Level.SEVERE, "Unable to get the JSON Web Token signing algorithm.", ex);
+            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACL_CLIENT_PV_PUSH_UNABLE_TO_GET_THE_JSON_WEB_TOKEN_SIGNING_ALGORITHM_LOG, ex);
             throw ex;
         }
 
-        if (tokenBody == null) {
-            LOGGER.log(Level.SEVERE, String.format("Unable to extract a JSON object from the request body %s.", requestBody));
-            throw new MiraclClientException("Unable to extract a JSON object from the request body.");
-        }
-        if(newUserToken == ""){
-            LOGGER.log(Level.SEVERE, String.format("Unable to extract a new user token from the request body %s.", requestBody));
-            throw new MiraclClientException("Unable to extract a new user token from the request body.");
-        }
         if (!validatePushToken(newUserToken, signingAlgorithm)) {
-            LOGGER.log(Level.SEVERE, String.format("Invalid push token in the request body: %s.", requestBody));
-            throw new MiraclClientException("Invalid push token in the request body.");
+            LOGGER.log(Level.SEVERE, String.format(MiraclMessages.MIRACL_CLIENT_PV_PUSH_INVALID_PUSH_TOKEN_IN_THE_REQUEST_BODY_LOG, requestBody));
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_INVALID_PUSH_TOKEN_IN_THE_REQUEST_BODY);
         }
+
         JWTClaimsSet tokenSet = extractClaims(newUserToken, signingAlgorithm);
         JSONObject eventsClaim = (JSONObject) tokenSet.getClaim("events");
         if (eventsClaim == null) {
-            throw new MiraclClientException("\"events\" key not found in activation JWT");
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_EVENTS_KEY_NOT_FOUND_IN_ACTIVATION_JWT);
         }
+
         Object newUser = eventsClaim.get("newUser");
         if (newUser == null) {
-            throw new MiraclClientException("\"newUser\" key not found in activation JWT");
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_NEW_USER_KEY_NOT_FOUND_IN_ACTIVATION_JWT);
         }
+
         String mpinIdHash = ((JSONObject) newUser).getAsString(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH);
         String activationKey = ((JSONObject) newUser).getAsString(IdentityActivationModel.ACTIVATION_KEY);
         String subject = ((JSONObject) newUser).getAsString(IdentityActivationModel.USER_ID_KEY_PUSH);
@@ -468,7 +482,7 @@ public class MiraclClient {
      * @param algorithm The expected signing algorithm.
      * @return
      */
-    public boolean validatePushToken(String jwt, String algorithm) {
+    private boolean validatePushToken(String jwt, String algorithm) {
         JwtValidator validator = new JwtValidator(algorithm);
         validator.validatePushToken(jwt);
         return true;
@@ -508,17 +522,17 @@ public class MiraclClient {
      * @return {@link JWSAlgorithm}
      * @throws MiraclClientException
      */
-    public String getJWTSigningAlgorithm(String jwt) throws MiraclClientException {
+    String getJWTSigningAlgorithm(String jwt) throws MiraclClientException {
         String[] parts = jwt.split("\\.");
         if (parts.length != 3) {
-            throw new MiraclClientException("Invalid JWT");
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT);
         }
         JSONObject headerJSON = (JSONObject) JSONValue.parse(Base64.getDecoder().decode(parts[0]));
         if (headerJSON == null) {
-            throw new MiraclClientException("Unable to parse JWT header");
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_UNABLE_TO_PARSE_JWT_HEADER);
         }
         if (!headerJSON.containsKey("alg")) {
-            throw new MiraclClientException("Signing algorithm not specified in JWT header");
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_SIGNING_ALGORITHM_NOT_SPECIFIED_IN_JWT_HEADER);
         }
         return JWSAlgorithm.parse(headerJSON.getAsString(ALG_HEADER_KEY)).getName();
     }
@@ -544,30 +558,26 @@ public class MiraclClient {
             if (response.getStatusCode() == PLUGGABLE_VERIFICATION_ACTIVATION_ERROR_STATUS_CODE) {
                 throw new MiraclClientException("An error occured while activating user.");
             }
-        } catch (ParseException e) {
-            LOGGER.log(Level.SEVERE, "Unable to set pluggable verification content type.", e);
-            throw new MiraclClientException("An error occured while activating user.");
-        } catch (MalformedURLException e) {
-            LOGGER.log(Level.SEVERE, "Unable to create a pluggable verification activation POST request.", e);
-            throw new MiraclClientException("An error occured while activating user.");
+        } catch (MalformedURLException | ParseException e) {
+            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST_LOG, e);
+            throw new MiraclClientException(MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Unable to execute a pluggable verification activation POST request.", e);
-            throw new MiraclClientException("An error occured while activating user.");
+            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST_LOG, e);
+            throw new MiraclClientException(MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST);
         }
 
     }
 
     /**
      * Activates an identity that is a subject to pluggable verification
+     *  @param subject A unique identity identifier
      *
-     * @param subject A unique identity identifier
-     * @param pullUrl The URL of the MIRACL Trust pluggable verification pull endpoint
      */
-    public IdentityActivationModel pullVerification(String subject, String pullUrl) {
+    public IdentityActivationModel pullVerification(String subject) {
 
         try {
             HTTPRequest pullRequest = new HTTPRequest(HTTPRequest.Method.POST,
-                    new URL(pullUrl)
+                    new URL(MiraclClient.getPluggableVerificationPullEndpointURL())
             );
             pullRequest.setAuthorization(getClientCredentials());
             pullRequest.setContentType(PLUGGABLE_VERIFICATION_PULL_REQUEST_HTTP_CONTENT_TYPE);

@@ -268,7 +268,7 @@ public class SparkSamplePV {
 
         if (pluggableVerificationMethod == PLUGGABLE_VERIFICATION_MODE.PULL) {
             try {
-                IdentityActivationModel activationData = miracl.pullVerification(subject, MiraclClient.getPluggableVerificationPullEndpointURL());
+                IdentityActivationModel activationData = miracl.pullVerification(subject);
                 usersWaitingForActivation.put(activationData.getSubject(), activationData);
             } catch (MiraclClientException ex) {
                 LOGGER.log(Level.SEVERE, String.format("Unable to perform a pluggable verification pull request for subject %s", subject), ex);
