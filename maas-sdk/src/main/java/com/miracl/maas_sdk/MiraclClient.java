@@ -117,10 +117,6 @@ public class MiraclClient {
         return OIDCProviderMetadata.parse(providerInfo);
     }
 
-    public OIDCProviderMetadata getProviderMetadata() {
-        return providerMetadata;
-    }
-
     /**
      * Use a proxy for all out-going requests performed by the library.
      * <p>
@@ -389,12 +385,8 @@ public class MiraclClient {
      * @see #getUserId(MiraclStatePreserver) for requesting user ID
      */
     public String getEmail(MiraclStatePreserver preserver) {
-        final UserInfo userInfo = getUserInfo(preserver);
-        if (userInfo == null) {
-            return null;
-        }
-
-        final String email = userInfo.getStringClaim("email");
+        UserInfo userInfo = getUserInfo(preserver);
+        String email = userInfo.getStringClaim("email");
         return email == null ? "" : email;
     }
 
@@ -453,12 +445,21 @@ public class MiraclClient {
             throw ex;
         }
 
-        if (!validatePushToken(newUserToken, signingAlgorithm)) {
+        JwtValidator validator = new JwtValidator(signingAlgorithm);
+        validator.validatePushToken(newUserToken);
+        if (!validator.validatePushToken(newUserToken)) {
             LOGGER.log(Level.SEVERE, String.format(MiraclMessages.MIRACL_CLIENT_PV_PUSH_INVALID_PUSH_TOKEN_IN_THE_REQUEST_BODY_LOG, requestBody));
             throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_INVALID_PUSH_TOKEN_IN_THE_REQUEST_BODY);
         }
 
-        JWTClaimsSet tokenSet = extractClaims(newUserToken, signingAlgorithm);
+        JWTClaimsSet tokenSet;
+        try {
+            tokenSet = validator.extractClaims(newUserToken);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unable to extract claims from JWT.", e);
+            throw new MiraclClientException("Unable to extract claims from JWT.");
+        }
+
         JSONObject eventsClaim = (JSONObject) tokenSet.getClaim("events");
         if (eventsClaim == null) {
             throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PUSH_EVENTS_KEY_NOT_FOUND_IN_ACTIVATION_JWT);
@@ -475,45 +476,6 @@ public class MiraclClient {
         return new IdentityActivationModel(mpinIdHash, activationKey, subject);
     }
 
-    /**
-     * Validates a JWT used for pluggable validation
-     *
-     * @param jwt       A calid JSON Web Token.
-     * @param algorithm The expected signing algorithm.
-     * @return
-     */
-    private boolean validatePushToken(String jwt, String algorithm) {
-        JwtValidator validator = new JwtValidator(algorithm);
-        validator.validatePushToken(jwt);
-        return true;
-    }
-
-    /**
-     * @param jwt       A valid JSON Web Token.
-     * @param algorithm The expected signing algorithm
-     * @return {@link JWTClaimsSet} A set of claims contained in the JSON Web Token
-     * @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
-     */
-    private JWTClaimsSet extractClaims(String jwt, String algorithm) {
-        return extractClaims(jwt, JWSAlgorithm.parse(algorithm));
-    }
-
-    /**
-     * @param jwt       A valid JSON Web Token.
-     * @param algorithm The expected signing algorithm
-     * @return {@link JWTClaimsSet} A set of claims contained in the JSON Web Token
-     * @see <a href="https://jwt.io" target="_new">https://jwt.io</a>
-     */
-    private JWTClaimsSet extractClaims(String jwt, JWSAlgorithm algorithm) {
-
-        try {
-            JwtValidator validator = new JwtValidator(algorithm);
-            return validator.extractClaims(jwt);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Unable to extract claims from JWT.", e);
-            throw new MiraclClientException("Unable to extract claims from JWT.");
-        }
-    }
 
     /**
      * Extracts signing algorithm from signed JWT header.
@@ -559,11 +521,11 @@ public class MiraclClient {
                 throw new MiraclClientException("An error occured while activating user.");
             }
         } catch (MalformedURLException | ParseException e) {
-            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST_LOG, e);
-            throw new MiraclClientException(MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST);
+            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACL_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST_LOG, e);
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST_LOG, e);
-            throw new MiraclClientException(MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST);
+            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACL_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST_LOG, e);
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST);
         }
 
     }
@@ -587,10 +549,10 @@ public class MiraclClient {
             HTTPResponse response = pullRequest.send();
 
             if (response.getStatusCode() == PLUGGABLE_VERIFICATION_PULL_ERROR_STATUS_CODE) {
-                throw new MiraclClientException("An error occured while executing a pluggable verification pull request.");
+                throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PULL_ERROR_OCCURED_WHILE_EXECUTING_REQUEST);
             }
             if (response.getStatusCode() == PLUGGABLE_VERIFICATION_PULL_UNAUTHORIZED_STATUS_CODE) {
-                throw new MiraclClientException("Unable to authenticate towards the pluggable verification pull endpoint.");
+                throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_AUTHENTICATE);
             }
 
             JSONObject responseBody = response.getContentAsJSONObject();
@@ -600,27 +562,23 @@ public class MiraclClient {
             Date expirationTime = new Date(responseBody.getAsNumber(IdentityActivationModel.EXPIRATION_TIME).longValue() * 1000);
 
             if (mpinIdHash == null || mpinIdHash.equals("")) {
-                throw new MiraclClientException("MPin ID hash not been found in the pull verification request.");
+                throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PULL_MPIN_ID_NOT_FOUND);
             }
 
             if (activationKey == null || activationKey.equals("")) {
-                throw new MiraclClientException("Activation key not been found in the pull verification request.");
+                throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PULL_ACTIVATION_KEY_NOT_FOUND);
             }
 
             if (expirationTime.before(new Date())) {
-                throw new MiraclClientException("Pull pluggable verification request has expired.");
+                throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PULL_REQUEST_EXPIRED);
             }
             return new IdentityActivationModel(mpinIdHash, activationKey, subject);
-
-        } catch (ParseException e) {
-            LOGGER.log(Level.SEVERE, "Unable to set pluggable verification pull request content type.", e);
-            throw new MiraclClientException("An error occured while pulling pluggable verification data.");
-        } catch (MalformedURLException e) {
-            LOGGER.log(Level.SEVERE, "Unable to create a pluggable verification pull POST request.", e);
-            throw new MiraclClientException("An error occured while pulling pluggable verification data.");
+        } catch (MalformedURLException | ParseException e) {
+            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_CREATE_POST_REQUEST, e);
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_CREATE_POST_REQUEST);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Unable to execute a pluggable verification pull POST request.", e);
-            throw new MiraclClientException("An error occured while pulling pluggable verification data.");
+            LOGGER.log(Level.SEVERE, MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_EXECUTE_POST_REQUEST, e);
+            throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_EXECUTE_POST_REQUEST);
         }
     }
 

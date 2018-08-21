@@ -267,7 +267,7 @@ public class MiraclClientTest {
     }
 
     @Test
-    public void testSuccessful_PluggableVerificationPull() {
+    public void testPullVerification_SuccessfulExecution() {
         whenHttp(server)
                 .match(endsWithUri(MiraclConfig.PLUGGABLE_VERIFICATION_PULL_ENDPOINT))
                 .then(status(HttpStatus.OK_200), header("Content-Type", "application/json"), stringContent(String.format("{\"%s\": \"dummy\", \"%s\": \"dummy\", \"%s\": \"dummy\", \"%s\": \"%s\" }",
@@ -277,6 +277,11 @@ public class MiraclClientTest {
                         IdentityActivationModel.EXPIRATION_TIME,
                         new Date(new Date().getTime() + 100000).getTime())));
         MiraclConfig.setIssuer(String.format("http://localhost:%s", server.getPort()));
+        client.pullVerification("dummy");
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_CREATE_POST_REQUEST)
+    public void testPullVerification_NoEndpoint() {
         client.pullVerification("dummy");
     }
 
@@ -330,12 +335,12 @@ public class MiraclClientTest {
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
     }
 
-    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST)
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_ACTIVATE_UNABLE_TO_EXECUTE_ACTIVATION_POST_REQUEST)
     public void testIdentityActivation_noActivationEndpoint() {
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
     }
 
-    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACLE_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST)
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_ACTIVATE_UNABLE_TO_CREATE_ACTIVATION_POST_REQUEST)
     public void testIdentityActivation_erroneousActivationURL() {
         ((MiraclClientNoNetworkMock)client).setErroneusGetClientActivationEndpointURL(true);
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
@@ -384,6 +389,13 @@ public class MiraclClientTest {
     @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT)
     public void testgetIdentityActivationModelForRequest_invalidUserToken() throws Exception {
         client.getIdentityActivationModelForRequest("{\"new_user_token\": \"dummy\"}");
+    }
+
+    @Test
+    public void testGetEmail_userInfoNotParsable() {
+        preserver.put("miracl_userinfo","{{");
+        preserver.put("miracl_token","dummy");
+        Assert.assertEquals(client.getEmail(preserver),"");
     }
 
     @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT)

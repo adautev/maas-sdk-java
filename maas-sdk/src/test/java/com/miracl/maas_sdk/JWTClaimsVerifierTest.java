@@ -19,7 +19,7 @@ public class JWTClaimsVerifierTest {
 
     @Test(expectedExceptions = BadJWTException.class, expectedExceptionsMessageRegExp = "Missing token expiration claim")
     public void testVerify_noExpirationClaim() throws BadJWTException {
-        PushJWTClaimsVerifier verifier = new PushJWTClaimsVerifier();
+        JWTClaimsVerifier verifier = new JWTClaimsVerifier();
         JWTClaimsSet claimsSet =new JWTClaimsSet.Builder()
                 .subject("mr.crowley@example.com")
                 .issuer(MiraclConfig.ISSUER)

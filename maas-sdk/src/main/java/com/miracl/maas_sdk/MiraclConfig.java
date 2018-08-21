@@ -1,6 +1,9 @@
 package com.miracl.maas_sdk;
 
-class MiraclConfig {
+final class MiraclConfig {
+    private MiraclConfig() {
+
+    }
     public static final String PLUGGABLE_VERIFICATION_PULL_ENDPOINT = "/activate/pull";
     public static final String DEFAULT_ISSUER = "https://api.mpin.io";
     public static String ISSUER = DEFAULT_ISSUER;
