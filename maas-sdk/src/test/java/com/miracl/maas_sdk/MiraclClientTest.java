@@ -237,7 +237,7 @@ public class MiraclClientTest {
     }
 
     @Test
-    public void testGetJWTSigningAlgorithm() {
+    public void testGetJWTSigningAlgorithm_successfulExecution() {
         String jwt = generateDummySignedJWT(JWSAlgorithm.RS256, TEST_URL);
         Assert.assertEquals(JWSAlgorithm.RS256.toString(), client.getJWTSigningAlgorithm(jwt));
         jwt = generateDummySignedJWT(JWSAlgorithm.RS384, null);
@@ -246,7 +246,18 @@ public class MiraclClientTest {
         Assert.assertEquals(JWSAlgorithm.RS512.toString(), client.getJWTSigningAlgorithm(jwt));
     }
 
-    @Test(expectedExceptions = MiraclClientException.class)
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_UNABLE_TO_PARSE_JWT_HEADER)
+    public void testGetJWTSigningAlgorithm_noHeader() {
+        client.getJWTSigningAlgorithm("xx.xx.xx");
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_SIGNING_ALGORITHM_NOT_SPECIFIED_IN_JWT_HEADER)
+    public void testGetJWTSigningAlgorithm_noAlgInHeader() {
+        String dummyHeader = Base64.getEncoder().encodeToString("{\"key\" : \"value\"}".getBytes());
+        client.getJWTSigningAlgorithm(dummyHeader + ".xx.xx");
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT)
     public void testGetJWTSigningAlgorithm_should_throw_exception_whenJWTNotSigned() {
         String jwt = generateDummyNotSignedJWT();
         client.getJWTSigningAlgorithm(jwt);

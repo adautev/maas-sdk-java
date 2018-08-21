@@ -50,4 +50,15 @@ public class JWTClaimsVerifierTest {
         verifier.verify(claimsSet, null);
     }
 
+    @Test
+    public void testVerify_valid_noSecurityContext() throws BadJWTException {
+        JWTClaimsVerifier verifier = new JWTClaimsVerifier();
+        JWTClaimsSet claimsSet =new JWTClaimsSet.Builder()
+                .subject("mr.crowley@example.com")
+                .issuer(MiraclConfig.ISSUER)
+                .expirationTime(new Date(new Date().getTime() + 10000))
+                .build();
+        verifier.verify(claimsSet);
+    }
+
 }

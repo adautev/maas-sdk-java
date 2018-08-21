@@ -401,12 +401,8 @@ public class MiraclClient {
      * @see #getEmail(MiraclStatePreserver) for requesting user e-mail
      */
     public String getUserId(MiraclStatePreserver preserver) {
-        final UserInfo userInfo = getUserInfo(preserver);
-        if (userInfo == null) {
-            return null;
-        }
-
-        final String sub = userInfo.getStringClaim("sub");
+        UserInfo userInfo = getUserInfo(preserver);
+        String sub = userInfo.getStringClaim("sub");
         return sub == null ? "" : sub;
     }
 
@@ -489,14 +485,14 @@ public class MiraclClient {
         if (parts.length != 3) {
             throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_INVALID_JWT);
         }
-        JSONObject headerJSON = (JSONObject) JSONValue.parse(Base64.getDecoder().decode(parts[0]));
-        if (headerJSON == null) {
+        Object headerJSON = JSONValue.parse(Base64.getDecoder().decode(parts[0]));
+        if (headerJSON == null || !(headerJSON instanceof JSONObject)) {
             throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_UNABLE_TO_PARSE_JWT_HEADER);
         }
-        if (!headerJSON.containsKey("alg")) {
+        if (!((JSONObject)headerJSON).containsKey("alg")) {
             throw new MiraclClientException(MiraclMessages.MIRACL_CLIENT_GET_SIGNING_ALGORITHM_SIGNING_ALGORITHM_NOT_SPECIFIED_IN_JWT_HEADER);
         }
-        return JWSAlgorithm.parse(headerJSON.getAsString(ALG_HEADER_KEY)).getName();
+        return JWSAlgorithm.parse(((JSONObject)headerJSON).getAsString(ALG_HEADER_KEY)).getName();
     }
 
     /**
