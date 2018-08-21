@@ -119,5 +119,21 @@ public class PushJWTClaimsVerifierTest {
                 .build();
         verifier.verify(claimsSet, null);
     }
+    @Test
+    public void testVerify_valid_noSecurityContext() throws BadJWTException {
+        JSONObject events = new JSONObject();
+        JSONObject newUser = new JSONObject();
+        newUser.put(IdentityActivationModel.MPIN_ID_HASH_KEY_PUSH, "1234");
+        newUser.put(IdentityActivationModel.ACTIVATION_KEY, "1234");
+        events.put("newUser", newUser);
+        PushJWTClaimsVerifier verifier = new PushJWTClaimsVerifier();
+        JWTClaimsSet claimsSet =new JWTClaimsSet.Builder()
+                .subject("mr.crowley@example.com")
+                .issuer(MiraclConfig.ISSUER)
+                .expirationTime(new Date(new Date().getTime() + 10000))
+                .claim("events", events)
+                .build();
+        verifier.verify(claimsSet);
+    }
 
 }

@@ -13,6 +13,11 @@ public class MiraclConfigTest {
     }
 
     @Test
+    public void testConstructor() {
+        assertNotNull(new MiraclConfig());
+    }
+
+    @Test
     public void testCertsApiEndpoint() {
         assertEquals("/oidc/certs", MiraclConfig.CERTS_API_ENDPOINT);
     }

@@ -269,11 +269,17 @@ public class MiraclClientTest {
     }
 
     @Test
-    public void testSuccessful_IdentityActivation() {
+    public void testActivateIdentity_success() {
         whenHttp(server)
                 .match(endsWithUri(MiraclConfig.PLUGGABLE_VERIFICATION_ACTIVATION_ENDPOINT))
                 .then(status(HttpStatus.OK_200));
         MiraclConfig.setIssuer(String.format("http://localhost:%s", server.getPort()));
+        client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
+    }
+
+    @Test(expectedExceptions = MiraclClientException.class, expectedExceptionsMessageRegExp = MiraclMessages.MIRACL_CLIENT_PV_PULL_UNABLE_TO_EXECUTE_POST_REQUEST)
+    public void testActivateIdentity_missingEndpoint() {
+        MiraclConfig.setIssuer(String.format("http://dummy:%s", server.getPort()));
         client.activateIdentity(new IdentityActivationModel("dummy", "dummy", "dummy"));
     }
 
